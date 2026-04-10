@@ -143,4 +143,4 @@ proj/**/*
 reports/
 reports/**/*
 **/.idea
-
+.claude/settings.local.json

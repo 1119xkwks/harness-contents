@@ -1,0 +1,8 @@
+{
+    "skills": [
+        {
+            "id": "admin-setup",
+            "path": ".claude/skills/admin-setup"
+        }
+    ]
+}
