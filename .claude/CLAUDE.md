@@ -8,6 +8,8 @@ Fe Admin Dashboard를 자동으로 생성하고 검증합니다.
 - Chrome 확장 확인 및 화면 검증
 - 완료 후 http://localhost:3001에서 확인 가능
 
+**프로젝트 생성 위치**: `proj/fe-admin` 디렉터리에 Next.js 프로젝트 생성
+
 ---
 
 **추가될 기능은 계속 업데이트됩니다.**
