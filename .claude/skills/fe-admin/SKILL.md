@@ -31,8 +31,9 @@ trigger: /fe-admin-setup
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
 | 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `proj/fe-admin` 프론트앤드 코드 |
 | 2b | 관리자 프론트엔드 검수 | frontend 검수 | 작업 2a | `reports/02-admin-fe-validator.md` |
-| 2c | 관리자 백엔드 개발 | backand | 작업 1 | `proj/be-admin` 백엔드 코드 |
-| 2d | 관리자 프론트엔드 검수 | backand 검수 | 작업 2c | `reports/03-admin-be-validator.md` |
+| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `proj/be-admin` 백엔드 코드 |
+| 2d | 관리자 백엔드 검수 | backend 검수 | 작업 2c | `reports/03-admin-be-validator.md` |
+| 3 | 테스트 & 리뷰 | qa | 작업 2a, 2c | ``proj/04_test_plan.md, 테스트 코드 |
 
 작업 2a(관리자 프론트엔드 개발), 2c( 관리자 백엔드 개발)는 **병렬 실행**한다. 모두 작업 1(사전 인터뷰)에만 의존한다.
 
@@ -59,21 +60,6 @@ Skill 완료 후 자동으로 다음을 수행합니다:
    - ✅ 타이포그래피 가이드라인 (typography.md) 준수
    - ✅ 레이아웃 가이드라인 (layout.md) 준수
 
-## Admin FE Developer Agent 활용
-
-이후 새로운 페이지를 추가할 때:
-
-```
-새로운 사용자 관리 페이지를 만들어줘
-경로: app/dashboard/users/page.tsx
-breadcrumbs: [대시보드, 사용자 관리]
-```
-
-Agent가 자동으로:
-- docs/ui/ 가이드라인 준수
-- MainLayout 적용
-- 구조 및 스타일 동기화
-
 ## 주의사항
 
 - ⚠️ 기존 파일을 덮어쓸 수 있습니다
@@ -93,50 +79,11 @@ Agent가 자동으로:
 
 **이제 다음을 순서대로 수행합니다:**
 
-### 1단계: Admin FE Developer Agent 호출
-`.claude/agents/admin-fe-developer.md`에 정의된 Admin FE Developer Agent를 호출하여 모든 파일 생성
-
-### 2단계: 의존성 설치 & 빌드 검증
+### 의존성 설치 & 빌드 검증
 ```bash
 cd proj/fe-admin
 npm install && npm run build
 ```
-
-### 3단계: 개발 서버 시작 (백그라운드)
-```bash
-npm run dev -- --port 3001
-```
-
-### 4단계: 자동 화면 검증
-Claude in Chrome MCP로 다음 항목 확인:
-- ✅ 헤더 (AppBar) 렌더링
-- ✅ 사이드바 메뉴 및 확장/축소
-- ✅ Breadcrumbs 표시
-- ✅ 통계 카드 4개
-- ✅ 모바일 반응형 (375x812)
-
-### 5단계: Admin FE Validator Agent 호출
-`.claude/agents/admin-fe-validator.md`에 정의된 Admin FE Validator Agent를 호출하여 다음 검증:
-- ✅ 색상 가이드라인 (docs/ui/color.md) 준수
-  - CSS 변수 정의 확인
-  - Primary, Secondary, Status 색상 사용 검증
-- ✅ 타이포그래피 가이드라인 (docs/ui/typography.md) 준수
-  - Geist 폰트 사용 확인
-  - H1-H6 제목 스타일 검증
-  - 본문, 라벨 스타일 검증
-- ✅ 레이아웃 가이드라인 (docs/ui/layout.md) 준수
-  - Sidebar 크기/위치 (280px, fixed, Z-index 40)
-  - AppBar 높이/패딩 (64px, 1rem 2rem)
-  - 반응형 브레이크포인트 (768px, 480px)
-  - MainLayout 사용 여부
-
-### 6단계: 최종 리포트 생성
-모든 리포트는 `reports/` 경로에 markdown 파일로 생성됩니다:
-- `reports/layout-validator-report.md`: 가이드라인 준수 검증 결과
-  - 색상 가이드라인 준수 여부
-  - 타이포그래피 가이드라인 준수 여부
-  - 레이아웃 가이드라인 준수 여부
-  - 종합 평가 및 개선사항
 
 ---
 

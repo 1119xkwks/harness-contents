@@ -5,7 +5,7 @@
 ### `/fe-admin-setup`
 관리자 FE 페이지를 자동으로 생성합니다.
 - 레이아웃, 컴포넌트, 페이지 모두 자동 생성
-- 프로젝트 생성 위치: `proj/fe-admin` 디렉터리
+- 프로젝트 생성 위치: `proj/fe-admin`, `proj/be-admin` 디렉터리
 
 ## 개발 서버 실행
 
