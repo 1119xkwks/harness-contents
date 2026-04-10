@@ -1,4 +1,4 @@
-# Layout Builder Agent
+# Admin FE Developer Agent
 
 ## 역할
 관리자 FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전히 생성 및 구현합니다.
