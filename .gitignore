@@ -140,5 +140,7 @@ vite.config.ts.timestamp-*
 
 proj/
 proj/**/*
+reports/
+reports/**/*
 **/.idea
 
