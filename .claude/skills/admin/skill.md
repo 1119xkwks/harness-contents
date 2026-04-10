@@ -1,7 +1,7 @@
 ---
-name: fe-admin-setup
+name: admin-setup
 description: 프런트 앤드 관리자 페이지를 자동으로 생성하고 화면 검증까지 수행
-trigger: /fe-admin-setup
+trigger: /admin-setup
 ---
 
 # 관리자 FE 페이지 Setup & Validation
