@@ -341,6 +341,63 @@ POST   /api/{feature-name}/delete/{id}  -- 삭제 (Soft Delete)
 - [ ] Soft Delete 로직 확인
 - [ ] Authentication 주입으로 사용자 정보 처리 확인
 
+## application.yml 설정 — 첨부파일 저장 경로
+
+프로젝트 시작 시 다음 프로퍼티를 **반드시** 설정해야 한다:
+
+```yaml
+app:
+  file:
+    root-directory: "C:/uploads"  # 절대 경로 (예: C:/uploads, /home/user/uploads)
+```
+
+### 필수 사항
+
+- **키값(`app.file.root-directory`)은 반드시 존재해야 함** — 설정하지 않으면 애플리케이션 시작 시 500 에러 발생
+- **디렉터리가 존재해야 함** — 입력된 경로가 존재하지 않으면 500 에러 발생
+- **절대 경로 사용** — 상대 경로는 사용하지 않음
+
+### 구현
+
+`FileStorageInitializer` 컴포넌트에서 애플리케이션 시작 시 경로 유효성을 검사한다:
+
+```java
+@Component
+public class FileStorageInitializer {
+    
+    @Value("${app.file.root-directory:}")
+    private String rootDirectory;
+    
+    @PostConstruct
+    public void initialize() {
+        // 1) 프로퍼티 미설정 확인
+        if (rootDirectory == null || rootDirectory.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                "app.file.root-directory property is not set. " +
+                "Please configure the file storage path in application.yml"
+            );
+        }
+        
+        // 2) 디렉터리 존재 여부 확인
+        File directory = new File(rootDirectory);
+        if (!directory.exists()) {
+            throw new IllegalArgumentException(
+                "File storage directory does not exist: " + rootDirectory + ". " +
+                "Please create the directory or update app.file.root-directory in application.yml"
+            );
+        }
+        
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException(
+                "app.file.root-directory is not a valid directory: " + rootDirectory
+            );
+        }
+    }
+}
+```
+
+---
+
 ## 첨부파일 전용 로직 (File)
 
 첨부파일은 일반 Feature와 별도로 `file` 패키지에서 전담 처리한다. 다른 Feature의 Controller/Service에서 첨부파일 로직을 직접 구현하지 않는다.
@@ -460,7 +517,37 @@ public class DefaultContentStrategy implements FileContentStrategy {
 }
 ```
 
-#### 5. FileServiceImpl — 전략 선택
+#### 5. FileServiceImpl — 저장 경로 및 전략 선택
+
+파일 저장 시 `app.file.root-directory` 프로퍼티를 사용한다:
+
+```java
+@Service
+public class FileServiceImpl implements FileService {
+
+    @Value("${app.file.root-directory}")
+    private String rootDirectory;
+
+    @Autowired
+    private FileMapper fileMapper;
+
+    @Autowired
+    private List<FileContentStrategy> strategies;
+
+    @Override
+    public AttachmentsDTO upload(String targetTable, Long targetSeq, 
+                                  List<MultipartFile> files, 
+                                  Authentication authentication) throws IOException {
+        // 파일 저장 경로: {rootDirectory}/{targetTable}/{targetSeq}/
+        String savePath = rootDirectory + File.separator + targetTable + File.separator + targetSeq;
+        Files.createDirectories(Paths.get(savePath));
+        
+        // 파일 저장 로직...
+    }
+}
+```
+
+#### 6. FileServiceImpl — 파일 조회 및 다운로드
 
 ```java
 @Service
@@ -507,7 +594,7 @@ public class FileServiceImpl implements FileService {
 }
 ```
 
-#### 6. FileController
+#### 7. FileController
 
 ```java
 @RestController
@@ -564,7 +651,7 @@ public class FileController {
 }
 ```
 
-#### 7. FileMapper 메서드
+#### 8. FileMapper 메서드
 
 ```java
 @Mapper
