@@ -1,10 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run:*)",
-      "Bash(mkdir -p \"D:\\\\dev\\\\harness-contents\\\\proj\\\\be-admin\\\\src\\\\main\\\\java\\\\com\\\\harness\\\\beadmin\\\\users\\\\{controller,service,service/impl,mapper,dto}\")",
-      "Bash(mkdir -p \"D:\\\\dev\\\\harness-contents\\\\proj\\\\be-admin\\\\src\\\\main\\\\java\\\\com\\\\harness\\\\beadmin\\\\commonCode\\\\{controller,service,service/impl,mapper,dto}\")",
-      "Bash(ls -la \"D:\\\\dev\\\\harness-contents\\\\.claude\\\\agents\\\\\" && echo \"---\" && find \"D:\\\\dev\\\\harness-contents\\\\.claude\" -name \"*.md\" -type f)"
+      "Bash(npm run build)",
+      "Bash(npm run type-check)",
+      "Bash(npm run lint)",
+      "Bash(mkdir -p *)",
+      "Bash(rm proj/*)",
+      "Bash(find *)",
+      "Bash(ls *)",
+      "Bash(cd *)"
     ]
   }
 }

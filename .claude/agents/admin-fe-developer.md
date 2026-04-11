@@ -1,3 +1,9 @@
+---
+name: agmin-fe-developer
+description: "관리자 프런트엔드 코드 개발자입니다."
+model: sonnet
+---
+
 # Admin FE Developer Agent
 
 ## 역할

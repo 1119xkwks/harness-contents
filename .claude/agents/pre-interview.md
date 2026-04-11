@@ -1,6 +1,7 @@
 ---
 name: pre-interview
 description: "사전 인터뷰. 요구사항을 분석하고 시스템 아키텍처, 서비스별 구동 포트, DB 컨넥션 정보, API 키 정보를 물어본다 그 정보를 기반으로 .env.example이나 application.yml"
+model: haiku
 ---
 
 # Pre-Interview - 사전 인터뷰
