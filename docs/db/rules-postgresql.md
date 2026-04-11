@@ -137,7 +137,7 @@ CREATE TABLE users (
   created_at TIMESTAMP NOT NULL,
   updated_by INT,
   updated_at TIMESTAMP,
-  CONSTRAINT pk_users PRIMARY KEY (users_seq),
+  -- PK는 컬럼에 이미 명시를 했으므로 중복 명시하지 않음
   CONSTRAINT uni_users UNIQUE (email, username)
 );
 
@@ -164,7 +164,7 @@ CREATE TABLE orders (
   created_at TIMESTAMP NOT NULL,
   updated_by INT,
   updated_at TIMESTAMP,
-  CONSTRAINT pk_orders PRIMARY KEY (orders_seq),
+  -- PK는 컬럼에 이미 명시를 했으므로 중복 명시하지 않음
   CONSTRAINT uni_orders UNIQUE (order_number)
   -- FK constraint는 프로덕션 배포 시 별도 마이그레이션으로 추가
   -- FOREIGN KEY (users_seq) REFERENCES users(users_seq)
