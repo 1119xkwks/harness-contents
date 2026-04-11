@@ -54,8 +54,21 @@ ALTER TABLE users
 
 ### Index Example
 ```sql
-CREATE INDEX idx_users ON users(email);
 CREATE INDEX idx_orders ON orders(user_id, created_at);
+```
+
+### 중복 인덱스 금지
+- PK(`PRIMARY KEY`)와 UNIQUE 제약조건은 PostgreSQL에서 **자동으로 인덱스를 생성**한다
+- 따라서 PK 또는 UNIQUE가 걸린 동일 컬럼(조합)에 별도 `CREATE INDEX`를 하지 않는다
+
+```sql
+-- ✗ UNIQUE(email)가 이미 인덱스를 생성하므로 중복
+CONSTRAINT uni_users UNIQUE (email)
+CREATE INDEX idx_users ON users(email);  -- 불필요
+
+-- ✓ UNIQUE와 컬럼 조합이 다르면 별도 인덱스 필요
+CONSTRAINT uni_orders UNIQUE (order_number)
+CREATE INDEX idx_orders ON orders(users_seq, created_at);  -- 다른 컬럼 조합 → 필요
 ```
 
 ## 4. Common Columns (모든 테이블에 필수)
@@ -137,12 +150,11 @@ CREATE TABLE users (
   created_at TIMESTAMP NOT NULL,
   updated_by INT,
   updated_at TIMESTAMP,
-  CONSTRAINT pk_users PRIMARY KEY (users_seq),
+  -- PK는 컬럼에 이미 명시를 했으므로 중복 명시하지 않음
   CONSTRAINT uni_users UNIQUE (email, username)
 );
 
--- 인덱스 생성
-CREATE INDEX idx_users ON users(email, username);
+-- 인덱스: UNIQUE(email, username)가 자동 생성하므로 별도 인덱스 불필요
 ```
 
 ## 8. Example: Orders Table (with FK reference)
@@ -164,7 +176,7 @@ CREATE TABLE orders (
   created_at TIMESTAMP NOT NULL,
   updated_by INT,
   updated_at TIMESTAMP,
-  CONSTRAINT pk_orders PRIMARY KEY (orders_seq),
+  -- PK는 컬럼에 이미 명시를 했으므로 중복 명시하지 않음
   CONSTRAINT uni_orders UNIQUE (order_number)
   -- FK constraint는 프로덕션 배포 시 별도 마이그레이션으로 추가
   -- FOREIGN KEY (users_seq) REFERENCES users(users_seq)

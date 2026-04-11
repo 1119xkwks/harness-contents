@@ -1,7 +1,7 @@
 ---
-name: admin-setup
+name: projs-setup
 description: 프런트 앤드 관리자 페이지를 자동으로 생성하고 화면 검증까지 수행
-trigger: /admin-setup
+trigger: /projs-setup
 ---
 
 # 관리자 FE 페이지 Setup & Validation
@@ -17,10 +17,9 @@ trigger: /admin-setup
 | 에이전트 | 파일 | 역할 | 타입 |
 |---------|------|------|------|
 | 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트 정보 얻기 | general-purpose |
-| 관리자 FE 개발자 | `.claude/agents/admin-fe-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
-| 관리자 FE 검증자 | `.claude/agents/admin-fe-validator.md` | 생성된 파일이 docs/ui/ 가이드라인 준수하는지 검증 | general-purpose |
-| 관리자 BE 개발자 | `.claude/agents/admin-be-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
-| 관리자 BE 검증자 | `.claude/agents/admin-be-validator.md` | 관리자 BE 프로젝트 구조 및 컨벤션 규칙 파악 | general-purpose |
+| 관리자 FE 개발자 | `.claude/agents/frontend-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
+| 관리자 BE 개발자 | `.claude/agents/backend-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
+| QA 검증 | `.claude/agents/qa.md` | FE/BE 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
 
 ## 팀 구성 및 실행
 
@@ -29,13 +28,24 @@ trigger: /admin-setup
 | 순서 | 작업 | 담당 | 의존 | 산출물 |
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `proj/fe-admin` 프론트앤드 코드 |
-| 2b | 관리자 프론트엔드 검수 | frontend 검수 | 작업 2a | `reports/02-admin-fe-validator.md` |
-| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `proj/be-admin` 백엔드 코드 |
-| 2d | 관리자 백엔드 검수 | backend 검수 | 작업 2c | `reports/03-admin-be-validator.md` |
-| 3 | 테스트 & 리뷰 | qa | 작업 2a, 2c | ``proj/04_test_plan.md, 테스트 코드 |
+| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `projs/fe-next` 프론트앤드 코드 |
+| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `projs/be-springboot` 백엔드 코드 |
+| 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2c | DB 테이블 생성 완료 |
+| 4 | QA 검증 & 테스트 | qa | 작업 3 | `reports/qa.md`, 테스트 코드 |
 
 작업 2a(관리자 프론트엔드 개발), 2c( 관리자 백엔드 개발)는 **병렬 실행**한다. 모두 작업 1(사전 인터뷰)에만 의존한다.
+
+### 작업 3: 사용자 확인 (QA 전 필수 게이트)
+
+코드 생성이 완료되면 QA 실행 **전에** 사용자에게 다음을 확인받는다:
+
+1. **`application.yml` DB 접속 정보 확인** — 사전 인터뷰에서 받은 정보가 올바르게 설정되었는지 확인 요청
+2. **`docs/db/create-tables.sql` 직접 실행 요청** — 사용자가 DB 클라이언트(pgAdmin, DBeaver 등)에서 직접 DDL을 실행
+3. **테이블 생성 완료 확인** — 사용자가 "완료" 응답할 때까지 대기
+
+> **⚠ 금지: `create-tables.sql`을 에이전트가 직접 실행하지 않는다.** DB 스키마 변경은 반드시 사용자가 수동으로 수행한다.
+
+사용자 확인이 완료된 후 작업 4(QA)를 진행한다.
 
 **팀원 간 소통 흐름:**
 - 사전 인터뷰 완료 → frontend에게 컴포넌트 구조·라우팅 전달, backend에게 API·DB·인증 전달, qa에게 기능 요구사항 전달
@@ -55,7 +65,7 @@ Skill 완료 후 자동으로 다음을 수행합니다:
    - ✅ 메뉴 확장/축소 동작
    - ✅ 모바일 반응형 (375x812)
 
-4. **가이드라인 준수 검증**: Admin FE Validator Agent로 다음 검증
+4. **가이드라인 준수 검증**: QA 검증 에이전트로 다음 검증
    - ✅ 색상 가이드라인 (color.md) 준수
    - ✅ 타이포그래피 가이드라인 (typography.md) 준수
    - ✅ 레이아웃 가이드라인 (layout.md) 준수
@@ -81,12 +91,12 @@ Skill 완료 후 자동으로 다음을 수행합니다:
 
 ### 의존성 설치 & 빌드 검증
 ```bash
-cd proj/fe-admin
+cd projs/fe-next
 npm install && npm run build
 ```
 
 ---
 
-**마지막 수정**: 2026-04-10  
-**버전**: 1.1  
-**상태**: Admin FE Validator Agent 적용됨
+**마지막 수정**: 2026-04-11  
+**버전**: 1.2  
+**상태**: FE/BE 검증 통합 (QA 에이전트)

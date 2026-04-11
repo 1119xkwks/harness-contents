@@ -138,9 +138,15 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-proj/
-proj/**/*
+projs/
+projs/**/*
 reports/
 reports/**/*
 **/.idea
 .claude/settings.local.json
+.idea/
+.idea/**
+.vscode/
+.vscode/**
+uploads
+uploads/**

@@ -1,8 +1,11 @@
 {
     "skills": [
         {
-            "id": "admin-setup",
-            "path": ".claude/skills/admin-setup"
+            "id": "projs-setup",
+            "path": ".claude/skills/projs-setup"
         }
-    ]
+    ],
+    "env": {
+        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    }
 }
