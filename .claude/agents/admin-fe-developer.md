@@ -81,7 +81,12 @@ color: cyan
 - `docs/ui/typography.md`
 - `docs/ui/layout.md`
 
-### 3. 공통 컴포넌트 활용
+### 3. 브라우저 내장 함수 사용 금지
+- `window.alert()`, `window.confirm()` 사용 금지
+- 반드시 프로젝트 공통 함수 `$alert()`, `$confirm()`을 사용할 것
+- 상세 규칙: `docs/ui/alert-confirm.md` 참고
+
+### 4. 공통 컴포넌트 활용
 - **MainLayout**: 헤더, 사이드바, breadcrumbs 포함
 - **Sidebar**: 2-depth 메뉴 구조
 - **AppBar**: 통일된 헤더
