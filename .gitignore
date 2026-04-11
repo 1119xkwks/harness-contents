@@ -146,4 +146,5 @@ reports/**/*
 .claude/settings.local.json
 .idea/
 .idea/**
-
+.vscode/
+.vscode/**

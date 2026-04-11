@@ -216,7 +216,36 @@ model: haiku
 
 ---
 
-## 📋 PART 2: Admin BE 검증
+## 📋 PART 2: Build & Environment 검증
+
+### 1️⃣ Gradle 빌드 설정 검증
+
+#### build.gradle
+- [ ] `build.gradle` 파일 존재
+- [ ] Java 버전 명시
+  ```gradle
+  ✓ java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+  ```
+- [ ] 필수 의존성:
+  - [ ] Spring Boot 3.3.4+
+  - [ ] MyBatis 3.0.3+
+  - [ ] PostgreSQL Driver
+  - [ ] JWT (jjwt 0.12.6+)
+  - [ ] Lombok
+  - [ ] Spring Security
+  - [ ] Spring Web
+
+#### 빌드 검증
+- [ ] `./gradlew clean build` 성공 (컴파일 에러 0개)
+- [ ] 빌드 산출물 생성됨: `build/libs/*.jar`
+
+---
+
+## 📋 PART 3: Admin BE 검증
 
 ### 1️⃣ MyBatis 검증
 
