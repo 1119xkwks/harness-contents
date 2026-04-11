@@ -1,8 +1,8 @@
 {
     "skills": [
         {
-            "id": "admin-setup",
-            "path": ".claude/skills/admin-setup"
+            "id": "projs-setup",
+            "path": ".claude/skills/projs-setup"
         }
     ],
     "env": {
