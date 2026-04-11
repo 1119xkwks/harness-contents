@@ -53,7 +53,7 @@
   1. 클릭 시 `$confirm('로그아웃 하시겠습니까?')` 확인 모달
   2. 확인 → `POST /api/auth/logout` 호출
   3. Cookie 삭제 (`accessToken`, `refreshToken`)
-  4. `/login`으로 리다이렉트
+  4. `/admin/login`으로 리다이렉트
 
 ```typescript
 <AppBar

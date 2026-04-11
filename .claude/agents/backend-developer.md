@@ -1,5 +1,5 @@
 ---
-name: agmin-be-developer
+name: backend-developer
 description: "관리자 백엔드 코드 개발자입니다."
 model: sonnet
 color: blue
@@ -24,7 +24,7 @@ color: blue
 `BeAdminApplication`의 `@MapperScan`은 반드시 **mapper 패키지만** 스캔해야 한다:
 
 ```java
-@MapperScan("com.harness.beadmin.*.mapper")
+@MapperScan({"com.harness.beadmin.*.mapper", "com.harness.beadmin.admin.*.mapper"})
 ```
 
 > **금지**: `@MapperScan("com.harness.beadmin")` — 범위가 너무 넓으면 Service 인터페이스까지 MyBatis 매퍼로 등록되어, ServiceImpl 대신 MyBatis 프록시가 주입된다. 이 경우 `BindingException: Invalid bound statement` 에러가 발생한다.
@@ -32,13 +32,16 @@ color: blue
 ## 프로젝트 구조
 
 ```
-projs/be-admin/src/main/java/com/harness/beadmin/
-├── {featureName}/
-│   ├── controller/{FeatureNameController}.java
-│   ├── service/{FeatureNameService}.java (interface)
-│   ├── service/impl/{FeatureNameServiceImpl}.java
-│   ├── mapper/{FeatureNameMapper}.java
-│   └── dto/{FeatureNameDTO}.java
+projs/be-springboot/src/main/java/com/harness/beadmin/
+├── admin/
+│   └── {featureName}/
+│       ├── controller/{FeatureNameController}.java
+│       ├── service/{FeatureNameService}.java (interface)
+│       ├── service/impl/{FeatureNameServiceImpl}.java
+│       ├── mapper/{FeatureNameMapper}.java
+│       └── dto/{FeatureNameDTO}.java
+├── {featureName}/            ← 공통 기능 (auth, users, commonCodes, file)
+│   ├── controller/...
 ```
 
 ## HomeController (Public 엔드포인트)
@@ -473,7 +476,7 @@ public class FileStorageInitializer {
 ### 패키지 구조
 
 ```
-projs/be-admin/src/main/java/com/harness/beadmin/
+projs/be-springboot/src/main/java/com/harness/beadmin/
 ├── file/
 │   ├── controller/FileController.java
 │   ├── service/FileService.java (interface)
@@ -753,7 +756,7 @@ List<AttachmentFilesDTO> files = fileService.getFileList(board.getAttachmentsSeq
 ### 엔드포인트
 
 ```
-GET /api/admin-menus/tree
+GET /api/admin/menus/tree
 ```
 
 > `docs/api/api-admin-spec.md` 섹션 5-1 참조

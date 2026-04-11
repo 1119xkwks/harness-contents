@@ -17,8 +17,8 @@ trigger: /projs-setup
 | 에이전트 | 파일 | 역할 | 타입 |
 |---------|------|------|------|
 | 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트 정보 얻기 | general-purpose |
-| 관리자 FE 개발자 | `.claude/agents/admin-fe-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
-| 관리자 BE 개발자 | `.claude/agents/admin-be-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
+| 관리자 FE 개발자 | `.claude/agents/frontend-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
+| 관리자 BE 개발자 | `.claude/agents/backend-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
 | QA 검증 | `.claude/agents/qa.md` | FE/BE 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
 
 ## 팀 구성 및 실행
@@ -28,8 +28,8 @@ trigger: /projs-setup
 | 순서 | 작업 | 담당 | 의존 | 산출물 |
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `projs/fe-admin` 프론트앤드 코드 |
-| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `projs/be-admin` 백엔드 코드 |
+| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `projs/fe-next` 프론트앤드 코드 |
+| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `projs/be-springboot` 백엔드 코드 |
 | 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2c | DB 테이블 생성 완료 |
 | 4 | QA 검증 & 테스트 | qa | 작업 3 | `reports/qa.md`, 테스트 코드 |
 
@@ -91,7 +91,7 @@ Skill 완료 후 자동으로 다음을 수행합니다:
 
 ### 의존성 설치 & 빌드 검증
 ```bash
-cd projs/fe-admin
+cd projs/fe-next
 npm install && npm run build
 ```
 

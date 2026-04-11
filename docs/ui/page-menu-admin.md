@@ -19,7 +19,7 @@
 
 ---
 
-## 1. 로그인 (`/login`)
+## 1. 로그인 (`/admin/login`)
 
 | 항목 | 값 |
 |------|-----|
@@ -32,17 +32,17 @@
 - 중앙 정렬 로그인 카드
 - 입력 필드: ID, PW
 - 로그인 버튼
-- 로그인 성공 시 `/` 로 이동
+- 로그인 성공 시 `/admin` 로 이동
 
 ---
 
-## 2. 대시보드 (`/`)
+## 2. 대시보드 (`/admin`)
 
 | 항목 | 값 |
 |------|-----|
 | **유형** | `DASHBOARD` |
 | **메뉴** | 대시보드 > 대시보드 |
-| **API** | `GET /api/users/page`, `GET /api/admin-menus/page` |
+| **API** | `GET /api/users/page`, `GET /api/admin/menus/page` |
 
 ### 구성
 
@@ -55,11 +55,11 @@
 |---|----------|------------|-----|
 | 1 | 총 회원수 | `GET /api/users/page?size=1` | `totalElements` |
 | 2 | 최근 가입자 수 | `GET /api/users/page?size=1` | 최근 7일 기준 카운트 |
-| 3 | 메뉴 수 | `GET /api/admin-menus/page?size=1` | `totalElements` |
+| 3 | 메뉴 수 | `GET /api/admin/menus/page?size=1` | `totalElements` |
 
 ---
 
-## 3. 회원 목록 (`/member/list`)
+## 3. 회원 목록 (`/admin/member/list`)
 
 | 항목 | 값 |
 |------|-----|
@@ -71,8 +71,8 @@
 
 - **검색 영역**: 회원명(name), 회원 ID(id) 입력 + 검색 버튼
 - **테이블**: 페이징 목록
-- **행 클릭**: `/member/detail/{usersSeq}` 상세 페이지로 이동
-- **등록 버튼**: `/member/detail/new` 로 이동
+- **행 클릭**: `/admin/member/detail/{usersSeq}` 상세 페이지로 이동
+- **등록 버튼**: `/admin/member/detail/new` 로 이동
 
 ### 테이블 컬럼
 
@@ -87,7 +87,7 @@
 
 ---
 
-## 4. 회원 상세 (`/member/detail/:usersSeq`)
+## 4. 회원 상세 (`/admin/member/detail/:usersSeq`)
 
 | 항목 | 값 |
 |------|-----|
@@ -98,8 +98,8 @@
 ### 구성
 
 - **모드**: 조회 / 생성 / 수정 (URL 파라미터로 구분)
-  - `/member/detail/new` → 생성 모드
-  - `/member/detail/{usersSeq}` → 조회 모드 (수정 버튼 클릭 시 수정 모드)
+  - `/admin/member/detail/new` → 생성 모드
+  - `/admin/member/detail/{usersSeq}` → 조회 모드 (수정 버튼 클릭 시 수정 모드)
 
 ### 프로필 이미지 (폼 최상단)
 
@@ -127,13 +127,13 @@
 
 ---
 
-## 5. 메뉴 관리 (`/system/menus`)
+## 5. 메뉴 관리 (`/admin/system/menus`)
 
 | 항목 | 값 |
 |------|-----|
 | **유형** | `TREE` |
 | **메뉴** | 시스템 관리 > 메뉴 관리 |
-| **API** | `GET /api/admin-menus/tree`, `POST /api/admin-menus/create`, `POST /api/admin-menus/update/{adminMenusSeq}`, `POST /api/admin-menus/delete/{adminMenusSeq}` |
+| **API** | `GET /api/admin/menus/tree`, `POST /api/admin/menus/create`, `POST /api/admin/menus/update/{adminMenusSeq}`, `POST /api/admin/menus/delete/{adminMenusSeq}` |
 
 ### 구성
 
@@ -165,20 +165,20 @@
 
 ---
 
-## 6. 권한 관리 (`/system/roles`)
+## 6. 권한 관리 (`/admin/system/roles`)
 
 | 항목 | 값 |
 |------|-----|
 | **유형** | `LIST` |
 | **메뉴** | 시스템 관리 > 권한 관리 |
-| **API** | `GET /api/admin-roles/page` |
+| **API** | `GET /api/admin/roles/page` |
 
 ### 구성
 
 - **검색 영역**: 역할명(roleName) 입력 + 검색 버튼
 - **테이블**: 페이징 목록
-- **행 클릭**: `/system/roles/detail/{adminRolesSeq}` 상세 페이지로 이동
-- **등록 버튼**: `/system/roles/detail/new` 로 이동
+- **행 클릭**: `/admin/system/roles/detail/{adminRolesSeq}` 상세 페이지로 이동
+- **등록 버튼**: `/admin/system/roles/detail/new` 로 이동
 
 ### 테이블 컬럼
 
@@ -191,13 +191,13 @@
 
 ---
 
-## 7. 권한 상세 (`/system/roles/detail/:adminRolesSeq`)
+## 7. 권한 상세 (`/admin/system/roles/detail/:adminRolesSeq`)
 
 | 항목 | 값 |
 |------|-----|
 | **유형** | `DETAIL` |
 | **메뉴** | 시스템 관리 > 권한 관리 (Breadcrumb에서 표시) |
-| **API** | `GET /api/admin-roles/{adminRolesSeq}`, `POST /api/admin-roles/create`, `POST /api/admin-roles/update/{adminRolesSeq}`, `POST /api/admin-roles/delete/{adminRolesSeq}` |
+| **API** | `GET /api/admin/roles/{adminRolesSeq}`, `POST /api/admin/roles/create`, `POST /api/admin/roles/update/{adminRolesSeq}`, `POST /api/admin/roles/delete/{adminRolesSeq}` |
 
 ### 구성
 
@@ -216,13 +216,13 @@
 
 ---
 
-## 8. 권한별 메뉴 관리 (`/system/role-menus`)
+## 8. 권한별 메뉴 관리 (`/admin/system/role-menus`)
 
 | 항목 | 값 |
 |------|-----|
 | **유형** | `MAPPING` |
 | **메뉴** | 시스템 관리 > 권한 관리 (별도 메뉴 또는 권한 관리 하위) |
-| **API** | `GET /api/admin-roles/page`, `GET /api/admin-menus/tree`, `GET /api/admin-role-menus/page`, `POST /api/admin-role-menus/save` |
+| **API** | `GET /api/admin/roles/page`, `GET /api/admin/menus/tree`, `GET /api/admin/role-menus/page`, `POST /api/admin/role-menus/save` |
 
 ### 구성 (좌우 분할 레이아웃)
 
@@ -245,12 +245,12 @@
 
 - **좌측**: 권한(역할) 목록 — 클릭으로 선택
 - **우측**: 메뉴 트리 + 체크박스 — 선택된 권한의 메뉴 매핑 표시
-- **저장 버튼**: `POST /api/admin-role-menus/save` 호출 (체크된 메뉴 일괄 저장)
+- **저장 버튼**: `POST /api/admin/role-menus/save` 호출 (체크된 메뉴 일괄 저장)
 - 좌측 권한 선택 변경 시 우측 체크 상태 갱신
 
 ---
 
-## 9. 공통코드 관리 (`/system/codes`)
+## 9. 공통코드 관리 (`/admin/system/codes`)
 
 | 항목 | 값 |
 |------|-----|
@@ -307,15 +307,15 @@
 
 | # | URL | 페이지명 | 유형 | 비고 |
 |---|-----|---------|------|------|
-| 1 | `/login` | 로그인 | `FORM` | Public |
-| 2 | `/` | 대시보드 | `DASHBOARD` | 숫자 카드 3개 |
-| 3 | `/member/list` | 회원 목록 | `LIST` | 검색 + 페이징 |
-| 4 | `/member/detail/:id` | 회원 상세 | `DETAIL` | 조회/생성/수정 |
-| 5 | `/system/menus` | 메뉴 관리 | `TREE` | D&D + 모달 CRUD |
-| 6 | `/system/roles` | 권한 목록 | `LIST` | 검색 + 페이징 |
-| 7 | `/system/roles/detail/:id` | 권한 상세 | `DETAIL` | 조회/생성/수정 |
-| 8 | `/system/role-menus` | 권한별 메뉴 | `MAPPING` | 좌:권한 / 우:메뉴트리 체크 |
-| 9 | `/system/codes` | 공통코드 관리 | `MASTER_DETAIL` | 좌:그룹 / 우:세부 |
+| 1 | `/admin/login` | 로그인 | `FORM` | Public |
+| 2 | `/admin` | 대시보드 | `DASHBOARD` | 숫자 카드 3개 |
+| 3 | `/admin/member/list` | 회원 목록 | `LIST` | 검색 + 페이징 |
+| 4 | `/admin/member/detail/:id` | 회원 상세 | `DETAIL` | 조회/생성/수정 |
+| 5 | `/admin/system/menus` | 메뉴 관리 | `TREE` | D&D + 모달 CRUD |
+| 6 | `/admin/system/roles` | 권한 목록 | `LIST` | 검색 + 페이징 |
+| 7 | `/admin/system/roles/detail/:id` | 권한 상세 | `DETAIL` | 조회/생성/수정 |
+| 8 | `/admin/system/role-menus` | 권한별 메뉴 | `MAPPING` | 좌:권한 / 우:메뉴트리 체크 |
+| 9 | `/admin/system/codes` | 공통코드 관리 | `MASTER_DETAIL` | 좌:그룹 / 우:세부 |
 
 ---
 

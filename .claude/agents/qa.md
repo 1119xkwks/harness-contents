@@ -19,7 +19,7 @@ model: haiku
 ### 1️⃣ 프로젝트 구조 검증
 
 #### 디렉토리 구조
-- [ ] `projs/fe-admin/` 존재
+- [ ] `projs/fe-next/` 존재
 - [ ] `app/` 디렉토리 구조
   ```
   ✓ app/
@@ -179,7 +179,7 @@ model: haiku
 #### 동적 경로 허용 검증
 - [ ] `RouteGuard`에서 `allowedUrls.includes(pathname)` 같은 정확 일치(exact match) 비교를 사용하지 않음
 - [ ] 메뉴에 등록된 URL(`/member/list`)의 하위 동적 경로(`/member/detail/123`)도 접근 허용됨
-- [ ] 상세 페이지, 등록 페이지 등 메뉴에 직접 등록되지 않은 하위 경로 진입 시 대시보드(`/`)로 리다이렉트되지 않음
+- [ ] 상세 페이지, 등록 페이지 등 메뉴에 직접 등록되지 않은 하위 경로 진입 시 대시보드(`/admin`)로 리다이렉트되지 않음
 - [ ] prefix 매칭 또는 1-depth 경로 기반 매칭으로 동적 라우트를 허용하는지 확인
   ```typescript
   ✓ allowedUrls.some((url) => pathname === url || pathSegments[0] === urlSegments[0])
@@ -510,6 +510,7 @@ model: haiku
 - [ ] SecurityContextHolder에 Authentication 세팅 확인
 
 #### RESTful API (GET, POST only)
+> 공통 기능: `/api/{feature-name}/...`, 관리자 기능: `/api/admin/{feature-name}/...`
 - [ ] GET /api/{feature-name}/page (목록 - 페이징)
 - [ ] GET /api/{feature-name}/{id} (상세)
 - [ ] POST /api/{feature-name}/create (생성)
@@ -527,10 +528,12 @@ model: haiku
 ### 4️⃣ 패키지 구조 검증
 
 #### 패키지 명명
-- [ ] 기능별 분리: `com.harness.beadmin.{featureName}`
+- [ ] 기능별 분리: `com.harness.beadmin.{featureName}` (공통) 또는 `com.harness.beadmin.admin.{featureName}` (관리자)
   ```
   ✓ com.harness.beadmin.users
   ✓ com.harness.beadmin.commonCodes
+  ✓ com.harness.beadmin.admin.menus
+  ✓ com.harness.beadmin.admin.roles
   ✗ com.harness.beadmin.controller
   ```
 
@@ -730,7 +733,7 @@ model: haiku
 
 ### FE 자동 검증
 ```bash
-cd projs/fe-admin
+cd projs/fe-next
 npm run type-check
 npm run lint
 npm run build

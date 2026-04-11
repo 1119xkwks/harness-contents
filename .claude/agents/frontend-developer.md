@@ -1,5 +1,5 @@
 ---
-name: agmin-fe-developer
+name: frontend-developer
 description: "관리자 프런트엔드 코드 개발자입니다."
 model: sonnet
 color: cyan
@@ -17,7 +17,7 @@ color: cyan
 - **`docs/api/api-admin-spec.md`의 API 명세를 반드시 참조하여 개발** (엔드포인트 URL, 요청/응답 형식 등)
 
 ### 프로젝트 구조 검증
-- Next.js 14+ 프로젝트 구조 확인 (projs/fe-admin)
+- Next.js 14+ 프로젝트 구조 확인 (projs/fe-next)
 - 필수 패키지 설치 여부 확인 (React, Next.js, MUI, @emotion/react, @emotion/styled)
 - package.json 및 tsconfig.json 존재 여부 확인
 
@@ -119,7 +119,7 @@ color: cyan
 ### 메뉴 조회 API
 
 ```
-GET /api/admin-menus/tree
+GET /api/admin/menus/tree
 Authorization: Bearer {accessToken}
 ```
 
@@ -137,7 +137,7 @@ Authorization: Bearer {accessToken}
         "adminMenusSeq": 4,
         "parentSeq": 1,
         "menuName": "대시보드",
-        "menuUrl": "/",
+        "menuUrl": "/admin",
         "menuDepth": 2,
         "orderSeq": 1
       }
@@ -148,7 +148,7 @@ Authorization: Bearer {accessToken}
 
 ### MenuContext (`app/contexts/MenuContext.tsx`)
 
-- `GET /api/admin-menus/tree`를 호출하여 메뉴 트리 상태 관리
+- `GET /api/admin/menus/tree`를 호출하여 메뉴 트리 상태 관리
 - 로그인 상태 변경 시 메뉴 재조회
 - loading 상태 관리
 - `allowedUrls` 계산: children의 menuUrl 배열 추출 (권한 체크에 사용)
@@ -197,7 +197,7 @@ interface AuthContextType {
 ```
 
 - `POST /api/auth/login` → 성공 시 Cookie에 토큰 저장 + user 상태 세팅
-- `POST /api/auth/logout` → Cookie 삭제 + `/login`으로 이동
+- `POST /api/auth/logout` → Cookie 삭제 + `/admin/login`으로 이동
 - 앱 초기 로드 시 토큰 유효성 확인
 
 ### 사용자 정보 조회 규칙 ★중요★
@@ -212,7 +212,7 @@ interface AuthContextType {
 ### API 클라이언트 (`app/lib/api.ts`)
 
 - fetch 래퍼: Authorization 헤더 자동 첨부
-- 401 응답 시 → refreshToken으로 갱신 시도 → 실패 시 `/login` 리다이렉트
+- 401 응답 시 → refreshToken으로 갱신 시도 → 실패 시 `/admin/login` 리다이렉트
 - `NEXT_PUBLIC_API_URL` 환경변수 또는 기본값 `http://localhost:8080`
 
 ### API 에러 처리 규칙
@@ -222,7 +222,7 @@ interface AuthContextType {
 | HTTP 상태 | 메시지 | 처리 |
 |-----------|--------|------|
 | 400 | `'잘못된 요청입니다.'` 또는 서버 응답 메시지 | `$alert()` |
-| 401 | (메시지 없이) | refreshToken 갱신 시도 → 실패 시 `/login` 리다이렉트 |
+| 401 | (메시지 없이) | refreshToken 갱신 시도 → 실패 시 `/admin/login` 리다이렉트 |
 | 403 | `'접근 권한이 없습니다.'` | `$alert()` |
 | 404 | `'요청한 데이터를 찾을 수 없습니다.'` | `$alert()` |
 | 500 | `'서버 에러가 발생했습니다. 잠시 후 다시 시도해주세요.'` | `$alert()` |
@@ -244,22 +244,22 @@ ThemeProvider
 
 ## 전역 미들웨어 (middleware.ts) ★핵심★
 
-> 파일 위치: `projs/fe-admin/src/middleware.ts` (Next.js App Router — `src/` 디렉터리 사용 시)
-> 또는 `projs/fe-admin/middleware.ts` (`src/` 미사용 시 프로젝트 루트, `app/`과 동일 레벨)
+> 파일 위치: `projs/fe-next/src/middleware.ts` (Next.js App Router — `src/` 디렉터리 사용 시)
+> 또는 `projs/fe-next/middleware.ts` (`src/` 미사용 시 프로젝트 루트, `app/`과 동일 레벨)
 
 ### 동작 규칙
 
 | 조건 | 동작 |
 |------|------|
-| 토큰 없음 + 보호 경로 접근 | `/login`으로 리다이렉트 (redirect 파라미터 포함) |
-| 토큰 있음 + `/login` 접근 | `/`로 리다이렉트 |
+| 토큰 없음 + 보호 경로 접근 | `/admin/login`으로 리다이렉트 (redirect 파라미터 포함) |
+| 토큰 있음 + `/admin/login` 접근 | `/admin`로 리다이렉트 |
 | 토큰 있음 + 보호 경로 접근 | 통과 |
-| `/` 접근 + 토큰 없음 | `/login`으로 리다이렉트 |
+| `/admin` 접근 + 토큰 없음 | `/admin/login`으로 리다이렉트 |
 
 ### Public 경로 (인증 불필요)
 
 ```typescript
-const PUBLIC_PATHS = ['/login'];
+const PUBLIC_PATHS = ['/admin/login'];
 ```
 
 ### 구현 구조
@@ -268,7 +268,7 @@ const PUBLIC_PATHS = ['/login'];
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/login'];
+const PUBLIC_PATHS = ['/admin/login'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -276,16 +276,16 @@ export function middleware(request: NextRequest) {
 
   // Public 경로 처리
   if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
-    // 이미 로그인된 사용자 → / 로 리다이렉트
+    // 이미 로그인된 사용자 → /admin 로 리다이렉트
     if (token) {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/admin', request.url));
     }
     return NextResponse.next();
   }
 
-  // 토큰 없으면 /login으로 리다이렉트
+  // 토큰 없으면 /admin/login으로 리다이렉트
   if (!token) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/admin/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -348,7 +348,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 
 | 항목 | 값 |
 |------|-----|
-| **경로** | `/login` |
+| **경로** | `/admin/login` |
 | **유형** | `FORM` (Public) |
 | **API** | `POST /api/auth/login` |
 | **레이아웃** | MainLayout 사용 안 함 |
@@ -358,7 +358,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 - 중앙 정렬 카드 (MUI Card)
 - 입력: ID, PW
 - 로그인 버튼
-- 성공 → Cookie에 토큰 저장 → `redirect` 파라미터 경로 또는 `/`로 이동
+- 성공 → Cookie에 토큰 저장 → `redirect` 파라미터 경로 또는 `/admin`로 이동
 - 실패 → `$alert('아이디 또는 비밀번호가 올바르지 않습니다.')` (window.alert 사용 금지)
 
 ---
@@ -369,14 +369,14 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 - 클릭 시 `$confirm('로그아웃 하시겠습니까?')` → 확인 시:
   1. `POST /api/auth/logout` 호출
   2. `clearTokens()` — Cookie 삭제
-  3. `/login`으로 리다이렉트
+  3. `/admin/login`으로 리다이렉트
 
 ## 호출 프롬프트
 
 ```
 다음 규칙을 따라 관리자 FE 페이지를 완성해줘:
 
-**프로젝트 위치**: projs/fe-admin (Next.js 14+)
+**프로젝트 위치**: projs/fe-next (Next.js 14+)
 
 **생성할 파일** (위의 "파일 생성" 섹션 참조):
 - 컴포넌트: Sidebar.tsx, MainLayout.tsx
