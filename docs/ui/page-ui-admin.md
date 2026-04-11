@@ -9,7 +9,8 @@
 | 유형 | 코드 | 설명 |
 |------|------|------|
 | Dashboard | `DASHBOARD` | 통계 숫자 카드 나열 |
-| List | `LIST` | 테이블 목록 + 검색 + 페이징 |
+| List | `LIST` | 테이블 목록 + 검색 + 페이징 → **[페이징 리스트 UI 규칙](paging-list-ui-admin.md) 필수 준수** |
+| Master-Detail 내 리스트 | - | Master-Detail 유형의 좌/우 목록도 동일 규칙 적용 |
 | Detail | `DETAIL` | 단건 상세 조회 + 수정/삭제 |
 | Tree | `TREE` | 트리 구조 표시 + 모달 CRUD |
 | Master-Detail | `MASTER_DETAIL` | 좌측 목록 + 우측 상세/하위 목록 |
