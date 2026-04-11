@@ -367,73 +367,77 @@ CREATE INDEX idx_attachment_files ON attachment_files(attachments_seq, order_seq
 -- ============================================================
 
 /*
--- 초기 관리자 계정 
+-- 초기 관리자 계정
 -- admin / admin1234
 INSERT INTO users (id, pw, name, is_admin, is_deleted, created_by, created_at)
-VALUES ('admin', '$2a$10$jB4h7H2bGIxB5ejjPe0ZGe5NiYfrzQw1Axve0Rnwg0xVQHzwE.bKy', '관리자', 'Y', 'N', 1, NOW());
+VALUES ('admin', '$2a$10$jB4h7H2bGIxB5ejjPe0ZGe5NiYfrzQw1Axve0Rnwg0xVQHzwE.bKy', '관리자', 'Y', 'N', currval('seq_users'), NOW());
 
 -- 역할 정의
 INSERT INTO admin_roles (role_name, role_description, is_deleted, created_by, created_at)
-VALUES ('system', '전체 권한 (시스템 관리 포함)', 'N', 1, NOW());
+VALUES ('system', '전체 권한 (시스템 관리 포함)', 'N', currval('seq_users'), NOW());
 INSERT INTO admin_roles (role_name, role_description, is_deleted, created_by, created_at)
-VALUES ('cms', '콘텐츠 관리 권한 (시스템 메뉴 제외)', 'N', 1, NOW());
+VALUES ('cms', '콘텐츠 관리 권한 (시스템 메뉴 제외)', 'N', currval('seq_users'), NOW());
 
 -- 메뉴: 1depth (대메뉴)
 INSERT INTO admin_menus (menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES ('대시보드', NULL, 'mdi-view-dashboard', 1, 1, 'Y', 'N', 1, NOW());
+VALUES ('대시보드', NULL, 'mdi-view-dashboard', 1, 1, 'Y', 'N', currval('seq_users'), NOW());
 INSERT INTO admin_menus (menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES ('회원 관리', NULL, 'mdi-account-group', 1, 2, 'Y', 'N', 1, NOW());
+VALUES ('회원 관리', NULL, 'mdi-account-group', 1, 2, 'Y', 'N', currval('seq_users'), NOW());
 INSERT INTO admin_menus (menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES ('시스템 관리', NULL, 'mdi-cog', 1, 3, 'Y', 'N', 1, NOW());
+VALUES ('시스템 관리', NULL, 'mdi-cog', 1, 3, 'Y', 'N', currval('seq_users'), NOW());
 
--- 메뉴: 2depth (소메뉴) - parent_seq는 실제 생성된 1depth PK에 맞게 조정 필요
--- 대시보드 > 대시보드 (parent_seq = 1)
+-- 메뉴: 2depth (소메뉴) - parent_seq는 서브쿼리로 1depth PK 참조
+-- 대시보드 > 대시보드
 INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES (1, '대시보드', '/', NULL, 2, 1, 'Y', 'N', 1, NOW());
--- 회원 관리 > 회원 목록 (parent_seq = 2)
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '대시보드' AND menu_depth = 1 AND is_deleted = 'N'), '대시보드', '/', NULL, 2, 1, 'Y', 'N', currval('seq_users'), NOW());
+-- 회원 관리 > 회원 목록
 INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES (2, '회원 목록', '/member/list', NULL, 2, 1, 'Y', 'N', 1, NOW());
--- 시스템 관리 > 메뉴 관리 (parent_seq = 3)
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '회원 관리' AND menu_depth = 1 AND is_deleted = 'N'), '회원 목록', '/member/list', NULL, 2, 1, 'Y', 'N', currval('seq_users'), NOW());
+-- 시스템 관리 > 메뉴 관리
 INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES (3, '메뉴 관리', '/system/menus', NULL, 2, 1, 'Y', 'N', 1, NOW());
--- 시스템 관리 > 권한 관리 (parent_seq = 3)
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '시스템 관리' AND menu_depth = 1 AND is_deleted = 'N'), '메뉴 관리', '/system/menus', NULL, 2, 1, 'Y', 'N', currval('seq_users'), NOW());
+-- 시스템 관리 > 권한 관리
 INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES (3, '권한 관리', '/system/roles', NULL, 2, 2, 'Y', 'N', 1, NOW());
--- 시스템 관리 > 공통코드 관리 (parent_seq = 3)
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '시스템 관리' AND menu_depth = 1 AND is_deleted = 'N'), '권한 관리', '/system/roles', NULL, 2, 2, 'Y', 'N', currval('seq_users'), NOW());
+-- 시스템 관리 > 권한별 메뉴 관리
 INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES (3, '공통코드 관리', '/system/codes', NULL, 2, 3, 'Y', 'N', 1, NOW());
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '시스템 관리' AND menu_depth = 1 AND is_deleted = 'N'), '권한별 메뉴 관리', '/system/role-menus', NULL, 2, 3, 'Y', 'N', currval('seq_users'), NOW());
+-- 시스템 관리 > 공통코드 관리
+INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '시스템 관리' AND menu_depth = 1 AND is_deleted = 'N'), '공통코드 관리', '/system/codes', NULL, 2, 4, 'Y', 'N', currval('seq_users'), NOW());
 
 -- 역할-사용자 매핑: admin 계정에 system 역할 부여
 INSERT INTO admin_role_users (admin_roles_seq, users_seq, is_deleted, created_by, created_at)
-VALUES (1, 1, 'N', 1, NOW());
+VALUES (
+  (SELECT admin_roles_seq FROM admin_roles WHERE role_name = 'system' AND is_deleted = 'N'),
+  (SELECT users_seq FROM users WHERE id = 'admin' AND is_deleted = 'N'),
+  'N', currval('seq_users'), NOW()
+);
 
 -- 역할-메뉴 매핑: system 역할 (전체 메뉴 접근)
 INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 1, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 2, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 3, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 4, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 5, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 6, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 7, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (1, 8, 'N', 1, NOW());
+SELECT
+  (SELECT admin_roles_seq FROM admin_roles WHERE role_name = 'system' AND is_deleted = 'N'),
+  am.admin_menus_seq,
+  'N', currval('seq_users'), NOW()
+FROM admin_menus am
+WHERE am.is_deleted = 'N';
 
--- 역할-메뉴 매핑: cms 역할 (시스템 관리 제외)
+-- 역할-메뉴 매핑: cms 역할 (시스템 관리 제외 — 대시보드, 회원 관리 1depth + 2depth)
 INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (2, 1, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (2, 2, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (2, 4, 'N', 1, NOW());
-INSERT INTO admin_role_menus (admin_roles_seq, admin_menus_seq, is_deleted, created_by, created_at)
-VALUES (2, 5, 'N', 1, NOW());
+SELECT
+  (SELECT admin_roles_seq FROM admin_roles WHERE role_name = 'cms' AND is_deleted = 'N'),
+  am.admin_menus_seq,
+  'N', currval('seq_users'), NOW()
+FROM admin_menus am
+WHERE am.is_deleted = 'N'
+  AND (
+    am.menu_name IN ('대시보드', '회원 관리')
+    OR am.parent_seq IN (
+      SELECT admin_menus_seq FROM admin_menus
+      WHERE menu_name IN ('대시보드', '회원 관리') AND menu_depth = 1 AND is_deleted = 'N'
+    )
+  );
 */
 
 -- ============================================================

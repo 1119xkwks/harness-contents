@@ -103,9 +103,12 @@ http.authorizeHttpRequests(auth -> auth
     .requestMatchers("/hello").permitAll()
     .requestMatchers("/error").permitAll()
     .requestMatchers("/api/auth/**").permitAll()
+    .requestMatchers("/api/file/content").permitAll()
+    .requestMatchers("/api/file/download").permitAll()
     .anyRequest().authenticated()
 );
 // ⚠ "/error"를 permitAll에 반드시 포함할 것 — 누락 시 내부 에러(500)가 403으로 변환됨
+// ⚠ "/api/file/content", "/api/file/download"는 반드시 permitAll — <img src> 등에서 토큰 없이 직접 접근해야 함
 ```
 
 ## MyBatis 규칙
@@ -226,6 +229,15 @@ if (!passwordEncoder.matches(loginRequest.getPw(), user.getPw())) {
 - **평문 저장 금지** — DB에 비밀번호를 평문으로 INSERT하지 않는다
 - **bcryptjs(Node) 해시 호환 불가** — `$2b$` 해시를 `$2a$`로 단순 치환하면 Spring과 호환되지 않을 수 있음. 반드시 Spring `BCryptPasswordEncoder`로 생성한 해시를 사용한다
 - **초기 데이터**: `admin1234` → `$2a$10$jB4h7H2bGIxB5ejjPe0ZGe5NiYfrzQw1Axve0Rnwg0xVQHzwE.bKy`
+
+---
+
+## JWT 토큰 보안 규칙 (절대 준수)
+
+- **JWT 토큰은 반드시 `Authorization: Bearer {token}` 헤더로만 전달한다**
+- **URL 파라미터(Query String)에 토큰을 절대 포함하지 않는다** — URL은 브라우저 히스토리, 서버 로그, Referer 헤더에 노출되어 심각한 보안 취약점이 된다
+- `<img src>`, `<a href>` 등 HTML 속성에서 직접 접근하는 엔드포인트(`/api/file/content`, `/api/file/download`)는 SecurityConfig에서 **permitAll**로 설정하여 토큰 없이 접근 가능하게 한다
+- FE에서 `getAccessToken()` 결과를 URL 파라미터에 붙이는 코드가 있으면 즉시 제거한다
 
 ---
 

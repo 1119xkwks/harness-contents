@@ -200,6 +200,15 @@ interface AuthContextType {
 - `POST /api/auth/logout` → Cookie 삭제 + `/login`으로 이동
 - 앱 초기 로드 시 토큰 유효성 확인
 
+### 사용자 정보 조회 규칙 ★중요★
+
+> **JWT 토큰에서 한글(name 등)을 직접 파싱하지 않는다.** `atob()`은 Latin-1만 처리하므로 한글이 깨진다.
+
+- JWT에서는 `usersSeq`(숫자)만 추출한다
+- 사용자 이름 등 한글이 포함된 정보는 반드시 **`GET /api/users/{usersSeq}` API를 호출**하여 가져온다
+- 로그인 직후와 페이지 새로고침(토큰 복원) 시 모두 API 조회를 사용한다
+- 로그인 응답(`json.data`)의 `name` 필드도 사용하지 않고 API 조회로 통일한다
+
 ### API 클라이언트 (`app/lib/api.ts`)
 
 - fetch 래퍼: Authorization 헤더 자동 첨부

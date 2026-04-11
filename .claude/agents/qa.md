@@ -234,6 +234,30 @@ model: haiku
 - [ ] Emotion (@emotion) 스타일링
 - [ ] 커스텀 스타일 최소화
 
+### 1️⃣2️⃣ JWT 토큰 보안 검증
+
+#### URL 파라미터에 토큰 노출 금지
+- [ ] FE 소스코드에서 URL 파라미터에 `token=` 이 포함된 문자열이 **없음**
+  ```typescript
+  ✗ `${BASE_URL}/api/file/content?...&token=${token}`
+  ✗ `${url}?token=${getAccessToken()}`
+  ✗ fetch(`/api/xxx?token=${token}`)
+  ```
+- [ ] `getAccessToken()` 결과가 URL 문자열 조합에 사용되지 않음 (헤더 설정에만 사용)
+  ```typescript
+  ✓ headers['Authorization'] = `Bearer ${token}`;
+  ✗ const url = `...?token=${token}`;
+  ```
+- [ ] GET 요청의 Query Parameter에 JWT 토큰이 포함되지 않음
+- [ ] POST 요청의 Request Body에 JWT 토큰이 포함되지 않음 (refresh 요청의 refreshToken 제외)
+- [ ] `<img src>`, `<a href>` 등 HTML 속성 URL에 토큰이 포함되지 않음
+
+#### BE SecurityConfig — 파일 콘텐츠/다운로드 permitAll 검증
+- [ ] `/api/file/content` 가 SecurityConfig에서 `permitAll()` 처리됨
+- [ ] `/api/file/download` 가 SecurityConfig에서 `permitAll()` 처리됨
+- [ ] `/api/file/upload` 는 `authenticated()` (permitAll **아님**)
+- [ ] `/api/file/delete` 는 `authenticated()` (permitAll **아님**)
+
 ---
 
 ## 📋 PART 2: Build & Environment 검증
@@ -643,6 +667,62 @@ model: haiku
   ```
 
 - [ ] onerror 핸들러로 404 이미지 대체 처리
+
+### 6️⃣ 엔티티-첨부파일 연동 구조 검증
+
+> 다른 Feature의 DTO에서 첨부파일(프로필 이미지 등)을 포함하여 응답할 때의 구현 패턴을 검증한다.
+
+#### DTO — 내부 클래스로 첨부파일 정보 포함
+- [ ] 첨부파일이 필요한 DTO에 `ProfileImage` 등 내부 static 클래스가 정의됨
+  ```java
+  ✓ public class UsersDTO {
+        private ProfileImage profileImage;
+
+        @Getter @Setter @NoArgsConstructor
+        public static class ProfileImage {
+            private Long attachmentsSeq;
+            private Long attachmentFilesSeq;
+        }
+    }
+  ```
+- [ ] 내부 클래스 필드는 `attachmentsSeq` + `attachmentFilesSeq` 두 개만 포함 (파일명, 경로 등 포함 금지)
+
+#### MyBatis resultMap — association 매핑
+- [ ] `resultMap`에 `<association>` 으로 내부 클래스 매핑
+- [ ] `notNullColumn` 속성으로 첨부파일이 없을 때 `null` 반환 (빈 객체 생성 방지)
+  ```xml
+  ✓ <association property="profileImage"
+               javaType="com.harness.beadmin.users.dto.UsersDTO$ProfileImage"
+               notNullColumn="pi_attachments_seq">
+        <result property="attachmentsSeq" column="pi_attachments_seq"/>
+        <result property="attachmentFilesSeq" column="pi_attachment_files_seq"/>
+    </association>
+  ✗ notNullColumn 누락 → 첨부파일 없는 레코드에서 빈 객체({attachmentsSeq:null}) 반환
+  ```
+
+#### SQL — LEFT JOIN LATERAL로 최신 첨부파일 1건 조회
+- [ ] `selectAll`, `selectById` 모두 첨부파일 JOIN이 포함됨 (목록·상세 모두 이미지 표시)
+- [ ] `LEFT JOIN LATERAL` + `LIMIT 1`로 최신 파일 1건만 조회
+- [ ] `attachments.is_deleted = 'N'` AND `attachment_files.is_deleted = 'N'` 조건 포함
+- [ ] `target_table` + `target_seq` 조건으로 해당 엔티티의 첨부파일만 조회
+  ```sql
+  ✓ LEFT JOIN LATERAL (
+        SELECT a.attachments_seq, af.attachment_files_seq
+        FROM attachments a
+        INNER JOIN attachment_files af
+            ON a.attachments_seq = af.attachments_seq
+            AND af.is_deleted = 'N'
+        WHERE a.target_table = 'users'
+          AND a.target_seq = u.users_seq
+          AND a.is_deleted = 'N'
+        ORDER BY af.attachment_files_seq DESC
+        LIMIT 1
+    ) pi ON true
+
+  ✗ INNER JOIN (첨부파일 없는 레코드가 목록에서 누락됨)
+  ✗ LEFT JOIN 없음 (API 응답에 profileImage가 항상 null)
+  ✗ LIMIT 없음 (첨부파일이 여러 건일 때 행 중복)
+  ```
 
 ---
 
