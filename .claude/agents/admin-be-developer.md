@@ -22,7 +22,7 @@ color: blue
 ## 프로젝트 구조
 
 ```
-proj/be-admin/src/main/java/com/harness/beadmin/
+projs/be-admin/src/main/java/com/harness/beadmin/
 ├── {featureName}/
 │   ├── controller/{FeatureNameController}.java
 │   ├── service/{FeatureNameService}.java (interface)
@@ -348,7 +348,7 @@ POST   /api/{feature-name}/delete/{id}  -- 삭제 (Soft Delete)
 ### 패키지 구조
 
 ```
-proj/be-admin/src/main/java/com/harness/beadmin/
+projs/be-admin/src/main/java/com/harness/beadmin/
 ├── file/
 │   ├── controller/FileController.java
 │   ├── service/FileService.java (interface)

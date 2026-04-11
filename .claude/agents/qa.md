@@ -19,7 +19,7 @@ model: haiku
 ### 1️⃣ 프로젝트 구조 검증
 
 #### 디렉토리 구조
-- [ ] `proj/fe-admin/` 존재
+- [ ] `projs/fe-admin/` 존재
 - [ ] `app/` 디렉토리 구조
   ```
   ✓ app/
@@ -576,7 +576,7 @@ model: haiku
 
 ### FE 자동 검증
 ```bash
-cd proj/fe-admin
+cd projs/fe-admin
 npm run type-check
 npm run lint
 npm run build

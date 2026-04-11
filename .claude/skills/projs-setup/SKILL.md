@@ -1,7 +1,7 @@
 ---
-name: admin-setup
+name: projs-setup
 description: 프런트 앤드 관리자 페이지를 자동으로 생성하고 화면 검증까지 수행
-trigger: /admin-setup
+trigger: /projs-setup
 ---
 
 # 관리자 FE 페이지 Setup & Validation
@@ -28,8 +28,8 @@ trigger: /admin-setup
 | 순서 | 작업 | 담당 | 의존 | 산출물 |
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `proj/fe-admin` 프론트앤드 코드 |
-| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `proj/be-admin` 백엔드 코드 |
+| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `projs/fe-admin` 프론트앤드 코드 |
+| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `projs/be-admin` 백엔드 코드 |
 | 3 | QA 검증 & 테스트 | qa | 작업 2a, 2c | `reports/qa.md`, 테스트 코드 |
 
 작업 2a(관리자 프론트엔드 개발), 2c( 관리자 백엔드 개발)는 **병렬 실행**한다. 모두 작업 1(사전 인터뷰)에만 의존한다.
@@ -78,7 +78,7 @@ Skill 완료 후 자동으로 다음을 수행합니다:
 
 ### 의존성 설치 & 빌드 검증
 ```bash
-cd proj/fe-admin
+cd projs/fe-admin
 npm install && npm run build
 ```
 

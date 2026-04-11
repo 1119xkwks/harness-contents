@@ -17,7 +17,7 @@ color: cyan
 - **`docs/api/api-admin-spec.md`의 API 명세를 반드시 참조하여 개발** (엔드포인트 URL, 요청/응답 형식 등)
 
 ### 프로젝트 구조 검증
-- Next.js 14+ 프로젝트 구조 확인 (proj/fe-admin)
+- Next.js 14+ 프로젝트 구조 확인 (projs/fe-admin)
 - 필수 패키지 설치 여부 확인 (React, Next.js, MUI, @emotion/react, @emotion/styled)
 - package.json 및 tsconfig.json 존재 여부 확인
 
@@ -115,7 +115,7 @@ color: cyan
 ```
 다음 규칙을 따라 관리자 FE 페이지를 완성해줘:
 
-**프로젝트 위치**: proj/fe-admin (Next.js 14+)
+**프로젝트 위치**: projs/fe-admin (Next.js 14+)
 
 **생성할 파일** (위의 "파일 생성" 섹션 참조):
 - 컴포넌트: Sidebar.tsx, MainLayout.tsx
