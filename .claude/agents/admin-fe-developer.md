@@ -110,6 +110,242 @@ color: cyan
 - ✅ 2-depth 메뉴 구조 완벽 구현
 - ✅ 모바일 반응형 적용
 
+---
+
+## 메뉴 API 연동 규칙
+
+> 메뉴를 하드코딩하지 않는다. 반드시 BE 엔드포인트에서 조회한다.
+
+### 메뉴 조회 API
+
+```
+GET /api/admin-menus/tree
+Authorization: Bearer {accessToken}
+```
+
+응답 구조:
+```json
+[
+  {
+    "adminMenusSeq": 1,
+    "menuName": "대시보드",
+    "menuIcon": "mdi-view-dashboard",
+    "menuDepth": 1,
+    "orderSeq": 1,
+    "children": [
+      {
+        "adminMenusSeq": 4,
+        "parentSeq": 1,
+        "menuName": "대시보드",
+        "menuUrl": "/",
+        "menuDepth": 2,
+        "orderSeq": 1
+      }
+    ]
+  }
+]
+```
+
+### MenuContext (`app/contexts/MenuContext.tsx`)
+
+- `GET /api/admin-menus/tree`를 호출하여 메뉴 트리 상태 관리
+- 로그인 상태 변경 시 메뉴 재조회
+- loading 상태 관리
+- `allowedUrls` 계산: children의 menuUrl 배열 추출 (권한 체크에 사용)
+- Sidebar 등 하위 컴포넌트에 메뉴 데이터 제공
+
+```tsx
+interface MenuContextType {
+  menus: MenuTreeDTO[];
+  allowedUrls: string[];
+  loading: boolean;
+  refreshMenus: () => Promise<void>;
+}
+```
+
+### Sidebar 변경
+
+- `app/constants/menu.ts`의 하드코딩 메뉴 배열 **삭제**
+- MenuContext에서 메뉴 데이터를 가져와서 렌더링
+- `menuIcon` 필드를 MUI 아이콘으로 매핑
+- 로딩 중이면 Skeleton 표시
+- 메뉴가 비어있으면 안내 메시지 표시
+
+---
+
+## 인증 관리 규칙
+
+### 토큰 저장 — Cookie 기반
+
+> Next.js middleware는 Edge Runtime이므로 localStorage 사용 불가. **Cookie 기반**으로 관리한다.
+
+- Cookie 이름: `accessToken`, `refreshToken`
+- `app/lib/auth.ts`에서 관리:
+  - `getAccessToken(): string | null`
+  - `setTokens(access: string, refresh: string): void`
+  - `clearTokens(): void`
+
+### AuthContext (`app/contexts/AuthContext.tsx`)
+
+```tsx
+interface AuthContextType {
+  user: { usersSeq: number; name: string; isAdmin: string } | null;
+  isAuthenticated: boolean;
+  login: (id: string, pw: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+}
+```
+
+- `POST /api/auth/login` → 성공 시 Cookie에 토큰 저장 + user 상태 세팅
+- `POST /api/auth/logout` → Cookie 삭제 + `/login`으로 이동
+- 앱 초기 로드 시 토큰 유효성 확인
+
+### API 클라이언트 (`app/lib/api.ts`)
+
+- fetch 래퍼: Authorization 헤더 자동 첨부
+- 401 응답 시 → refreshToken으로 갱신 시도 → 실패 시 `/login` 리다이렉트
+- `NEXT_PUBLIC_API_URL` 환경변수 또는 기본값 `http://localhost:8080`
+
+### Provider 적용 순서 (`app/providers.tsx`)
+
+```
+ThemeProvider
+  └─ AuthProvider
+       └─ MenuProvider
+            └─ children
+```
+
+---
+
+## 전역 미들웨어 (middleware.ts) ★핵심★
+
+> 파일 위치: `projs/fe-admin/src/middleware.ts` (Next.js App Router — `src/` 디렉터리 사용 시)
+> 또는 `projs/fe-admin/middleware.ts` (`src/` 미사용 시 프로젝트 루트, `app/`과 동일 레벨)
+
+### 동작 규칙
+
+| 조건 | 동작 |
+|------|------|
+| 토큰 없음 + 보호 경로 접근 | `/login`으로 리다이렉트 (redirect 파라미터 포함) |
+| 토큰 있음 + `/login` 접근 | `/`로 리다이렉트 |
+| 토큰 있음 + 보호 경로 접근 | 통과 |
+| `/` 접근 + 토큰 없음 | `/login`으로 리다이렉트 |
+
+### Public 경로 (인증 불필요)
+
+```typescript
+const PUBLIC_PATHS = ['/login'];
+```
+
+### 구현 구조
+
+```typescript
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const PUBLIC_PATHS = ['/login'];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const token = request.cookies.get('accessToken')?.value;
+
+  // Public 경로 처리
+  if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
+    // 이미 로그인된 사용자 → / 로 리다이렉트
+    if (token) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 토큰 없으면 /login으로 리다이렉트
+  if (!token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
+};
+```
+
+### 권한 기반 라우팅 (클라이언트 단)
+
+> middleware는 토큰 존재 여부만 판단. **메뉴 권한 체크는 클라이언트 단에서 처리**.
+
+`app/components/RouteGuard.tsx`:
+- MenuContext의 `allowedUrls`와 현재 pathname 비교
+- 허용되지 않은 경로 접근 시 → 첫 번째 허용 메뉴 URL로 리다이렉트
+- 메뉴 로딩 중이면 로딩 UI 표시
+
+```tsx
+'use client';
+import { usePathname, useRouter } from 'next/navigation';
+import { useMenu } from '@/contexts/MenuContext';
+
+export default function RouteGuard({ children }: { children: React.ReactNode }) {
+  const { allowedUrls, loading } = useMenu();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && allowedUrls.length > 0) {
+      if (!allowedUrls.includes(pathname)) {
+        router.replace(allowedUrls[0]);
+      }
+    }
+  }, [pathname, allowedUrls, loading]);
+
+  if (loading) return <LoadingSkeleton />;
+  return <>{children}</>;
+}
+```
+
+### 적용 위치
+
+MainLayout 내부에서 RouteGuard로 children을 감싼다:
+
+```tsx
+<MainLayout>
+  <RouteGuard>
+    {children}
+  </RouteGuard>
+</MainLayout>
+```
+
+---
+
+## 로그인 페이지 (`app/login/page.tsx`)
+
+| 항목 | 값 |
+|------|-----|
+| **경로** | `/login` |
+| **유형** | `FORM` (Public) |
+| **API** | `POST /api/auth/login` |
+| **레이아웃** | MainLayout 사용 안 함 |
+
+### 구성
+
+- 중앙 정렬 카드 (MUI Card)
+- 입력: ID, PW
+- 로그인 버튼
+- 성공 → Cookie에 토큰 저장 → `redirect` 파라미터 경로 또는 `/`로 이동
+- 실패 → `$alert('아이디 또는 비밀번호가 올바르지 않습니다.')` (window.alert 사용 금지)
+
+---
+
+## 로그아웃
+
+- AppBar 우측에 로그아웃 버튼 배치
+- 클릭 시 `$confirm('로그아웃 하시겠습니까?')` → 확인 시:
+  1. `POST /api/auth/logout` 호출
+  2. `clearTokens()` — Cookie 삭제
+  3. `/login`으로 리다이렉트
+
 ## 호출 프롬프트
 
 ```

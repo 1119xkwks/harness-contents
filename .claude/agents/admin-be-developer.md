@@ -678,6 +678,114 @@ List<AttachmentFilesDTO> files = fileService.getFileList(board.getAttachmentsSeq
 
 ---
 
+## 권한별 메뉴 트리 조회 (AdminMenus)
+
+로그인 사용자의 역할(Role)에 매핑된 메뉴만 트리 구조로 반환하는 기능.
+
+### 엔드포인트
+
+```
+GET /api/admin-menus/tree
+```
+
+> `docs/api/api-admin-spec.md` 섹션 5-1 참조
+
+### 응답 구조
+
+```java
+// 1depth 메뉴 (children 포함)
+public class MenuTreeDTO {
+    private Long adminMenusSeq;
+    private String menuName;
+    private String menuIcon;
+    private Integer menuDepth;
+    private Integer orderSeq;
+    private List<MenuTreeDTO> children; // 2depth 목록
+    // 2depth 전용
+    private Long parentSeq;
+    private String menuUrl;
+}
+```
+
+### Controller 규칙 — 로그인 없으면 404
+
+```java
+@GetMapping("/tree")
+public ResponseEntity<ApiResponse<List<MenuTreeDTO>>> getMenuTree(Authentication authentication) {
+    if (authentication == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail(404, "Not Found"));
+    }
+    List<MenuTreeDTO> tree = adminMenusService.getMenuTree(authentication);
+    return ResponseEntity.ok(ApiResponse.success(tree));
+}
+```
+
+### Service 구현 로직
+
+```java
+@Override
+public List<MenuTreeDTO> getMenuTree(Authentication authentication) {
+    CustomUserDetails currentUser = getCurrentUser(authentication);
+    Long usersSeq = currentUser.getUsersSeq();
+
+    // 1) 사용자의 역할에 매핑된 전체 메뉴 조회 (flat 리스트)
+    List<MenuTreeDTO> flatMenus = adminMenusMapper.selectMenuTreeByUsersSeq(usersSeq);
+
+    // 2) 1depth / 2depth 분리 후 트리 조립
+    List<MenuTreeDTO> parents = flatMenus.stream()
+            .filter(m -> m.getMenuDepth() == 1)
+            .sorted(Comparator.comparing(MenuTreeDTO::getOrderSeq))
+            .collect(Collectors.toList());
+
+    Map<Long, List<MenuTreeDTO>> childMap = flatMenus.stream()
+            .filter(m -> m.getMenuDepth() == 2)
+            .sorted(Comparator.comparing(MenuTreeDTO::getOrderSeq))
+            .collect(Collectors.groupingBy(MenuTreeDTO::getParentSeq));
+
+    parents.forEach(p -> p.setChildren(
+            childMap.getOrDefault(p.getAdminMenusSeq(), Collections.emptyList())
+    ));
+
+    return parents;
+}
+```
+
+### Mapper SQL — 사용자 역할 기반 메뉴 조회
+
+```xml
+<select id="selectMenuTreeByUsersSeq" parameterType="Long" resultType="MenuTreeDTO">
+    SELECT DISTINCT
+            m.admin_menus_seq
+            ,m.parent_seq
+            ,m.menu_name
+            ,m.menu_url
+            ,m.menu_icon
+            ,m.menu_depth
+            ,m.order_seq
+    FROM admin_menus m
+    INNER JOIN admin_role_menus rm
+        ON m.admin_menus_seq = rm.admin_menus_seq
+        AND rm.is_deleted = 'N'
+    INNER JOIN admin_role_users ru
+        ON rm.admin_roles_seq = ru.admin_roles_seq
+        AND ru.is_deleted = 'N'
+    WHERE ru.users_seq = #{usersSeq}
+      AND m.is_deleted = 'N'
+      AND m.is_active = 'Y'
+    ORDER BY m.menu_depth ASC, m.order_seq ASC
+</select>
+```
+
+### 조회 흐름
+
+```
+users → admin_role_users → admin_role_menus → admin_menus
+(usersSeq)  (역할 매핑)       (메뉴 매핑)       (메뉴 데이터)
+```
+
+---
+
 ## 실행 예
 
 사용자: "주문(orders) 기능을 추가해줘. 컬럼은 order_number, total_amount, status"
