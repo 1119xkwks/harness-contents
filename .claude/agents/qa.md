@@ -166,7 +166,19 @@ model: haiku
 - [ ] 대신 프로젝트 공통 `$alert()`, `$confirm()` 사용
 - [ ] 규칙 참고: `docs/ui/alert-confirm.md`
 
-### 8️⃣ 타입스크립트 검증
+### 8️⃣ RouteGuard 라우팅 검증
+
+#### 동적 경로 허용 검증
+- [ ] `RouteGuard`에서 `allowedUrls.includes(pathname)` 같은 정확 일치(exact match) 비교를 사용하지 않음
+- [ ] 메뉴에 등록된 URL(`/member/list`)의 하위 동적 경로(`/member/detail/123`)도 접근 허용됨
+- [ ] 상세 페이지, 등록 페이지 등 메뉴에 직접 등록되지 않은 하위 경로 진입 시 대시보드(`/`)로 리다이렉트되지 않음
+- [ ] prefix 매칭 또는 1-depth 경로 기반 매칭으로 동적 라우트를 허용하는지 확인
+  ```typescript
+  ✓ allowedUrls.some((url) => pathname === url || pathSegments[0] === urlSegments[0])
+  ✗ allowedUrls.includes(pathname)
+  ```
+
+### 9️⃣ 타입스크립트 검증
 
 #### 타입 정의
 - [ ] 컴포넌트 Props 타입 정의
@@ -186,7 +198,7 @@ model: haiku
 - [ ] `any` 타입 사용 금지
 - [ ] React.FC 사용
 
-### 9️⃣ 반응형 검증
+### 🔟 반응형 검증
 
 #### 모바일 (480px 이하)
 - [ ] Sidebar 숨김 (햄버거 메뉴)
@@ -201,7 +213,7 @@ model: haiku
 - [ ] Sidebar 전체 표시
 - [ ] 4컬럼+ 레이아웃
 
-### 🔟 컴포넌트 재사용 검증
+### 1️⃣1️⃣ 컴포넌트 재사용 검증
 
 #### 공통 컴포넌트 사용
 - [ ] MainLayout으로 모든 페이지 래핑
