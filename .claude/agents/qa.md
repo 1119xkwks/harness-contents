@@ -128,6 +128,14 @@ model: haiku
 - [ ] 이전(`<`) / 다음(`>`) 버튼 존재
 - [ ] 테이블 하단 중앙 정렬
 
+#### 행 번호(No) 계산 검증
+- [ ] 행 번호 계산 시 서버 응답의 `data.page`, `data.size` 대신 프론트 state 변수(`page`, `size`)를 사용
+  ```typescript
+  ✓ const no = (page - 1) * size + idx + 1;   // page는 프론트 state (1-based)
+  ✗ const no = (data.page) * data.size + idx + 1;  // 서버 응답에 page/size가 없으면 NaN
+  ```
+- [ ] 행 번호가 `NaN`으로 표시되지 않음 (서버 응답에 page/size 필드가 누락될 수 있음)
+
 #### 상태 처리
 - [ ] 로딩 중 스켈레톤 UI 표시
 - [ ] 데이터 0건일 때 "데이터가 없습니다." 메시지 표시
