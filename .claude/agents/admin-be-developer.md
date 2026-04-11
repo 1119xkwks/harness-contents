@@ -30,6 +30,71 @@ proj/be-admin/src/main/java/com/harness/beadmin/
 │   └── dto/{FeatureNameDTO}.java
 ```
 
+## HomeController (Public 엔드포인트)
+
+인증 없이 접근 가능한 엔드포인트를 정의하는 컨트롤러.
+SecurityConfig에서 `/hello` 등을 permitAll로 설정해야 한다.
+
+> **주입 규칙**: Controller → Service만 주입, ServiceImpl → Mapper만 주입. Controller에서 Mapper를 직접 주입하지 않는다.
+
+```java
+@RestController
+@RequestMapping("/")
+public class HomeController {
+
+    @Autowired
+    private HomeService homeService;
+
+    @GetMapping("/hello")
+    public ResponseEntity<ApiResponse<String>> hello() {
+        String now = homeService.getNow();
+        return ResponseEntity.ok(ApiResponse.success(now));
+    }
+}
+```
+
+```java
+// Service interface
+public interface HomeService {
+    String getNow();
+}
+
+// Service impl
+@Service
+public class HomeServiceImpl implements HomeService {
+
+    @Autowired
+    private HomeMapper homeMapper;
+
+    @Override
+    public String getNow() {
+        return homeMapper.selectNow();
+    }
+}
+```
+
+```java
+@Mapper
+public interface HomeMapper {
+    String selectNow();
+}
+```
+
+```xml
+<select id="selectNow" resultType="String">
+    SELECT TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS')
+</select>
+```
+
+```java
+// SecurityConfig — permitAll 설정
+http.authorizeHttpRequests(auth -> auth
+    .requestMatchers("/hello").permitAll()
+    .requestMatchers("/api/auth/**").permitAll()
+    .anyRequest().authenticated()
+);
+```
+
 ## MyBatis 규칙
 
 ### SQL 포맷팅
@@ -52,10 +117,164 @@ ORDER BY t.pk_column DESC
 
 ### Mapper 인터페이스
 - 메서드만 선언 (SQL은 XML에)
-- 메서드명: selectAll, selectById, selectByXxx, insert, update, softDelete
+- 메서드명: selectAll, selectAllCount, selectById, selectByXxx, insert, update, softDelete
 
 ### XML 쿼리 ID
 - selectAll, selectById, insert, update, softDelete
+
+## 페이징 규칙
+
+### 반환 타입
+- 페이징 목록 조회의 반환 타입은 `Page<T>`
+- 구현: `new PageImpl<>(entities, pageable, totalCount.intValue())`
+
+### Controller
+```java
+@GetMapping("/page")
+public ResponseEntity<ApiResponse<Page<UsersDTO>>> getPage(Pageable pageable) {
+    Page<UsersDTO> page = usersService.getPage(pageable);
+    return ResponseEntity.ok(ApiResponse.success(page));
+}
+```
+
+### Service
+```java
+// interface
+Page<UsersDTO> getPage(Pageable pageable);
+
+// impl
+@Override
+public Page<UsersDTO> getPage(Pageable pageable) {
+    List<UsersDTO> list = usersMapper.selectAll(pageable);
+    Long totalCount = usersMapper.selectAllCount();
+    return new PageImpl<>(list, pageable, totalCount.intValue());
+}
+```
+
+### Mapper XML
+```xml
+<!-- 목록 조회 (페이징) -->
+<select id="selectAll" resultType="UsersDTO">
+    SELECT  u.users_seq
+            ,u.id
+            ,u.name
+    FROM users u
+    WHERE u.is_deleted = 'N'
+    ORDER BY u.users_seq DESC
+    LIMIT #{pageable.pageSize}
+    OFFSET #{pageable.offset}
+</select>
+
+<!-- 전체 건수 -->
+<select id="selectAllCount" resultType="Long">
+    SELECT COUNT(*)
+    FROM users u
+    WHERE u.is_deleted = 'N'
+</select>
+```
+
+## Spring Security & JWT 인증 규칙
+
+### JWT 토큰에 저장하는 정보
+- `usersSeq` (Long) — 사용자 PK
+- `id` (String) — 회원 ID
+- `name` (String) — 회원명
+
+### JwtAuthenticationFilter
+JWT 토큰을 파싱하여 SecurityContextHolder에 Authentication을 세팅하는 필터.
+```java
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                     HttpServletResponse response,
+                                     FilterChain filterChain) throws ServletException, IOException {
+        String token = resolveToken(request);
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+        filterChain.doFilter(request, response);
+    }
+}
+```
+
+### CustomUserDetails
+JWT에서 추출한 사용자 정보를 담는 Principal 객체.
+```java
+public class CustomUserDetails implements UserDetails {
+    private Long usersSeq;
+    private String id;
+    private String name;
+    // ... UserDetails 메서드 구현
+}
+```
+
+### Service에서 로그인 사용자 정보 사용
+- **`@RequestHeader("X-User-Id")` 사용 금지** — 반드시 SecurityContextHolder 또는 Authentication 주입으로 사용자 정보를 꺼낸다.
+- Service 메서드에 `Authentication`을 파라미터로 주입받는 방식을 권장한다.
+
+```java
+// Service interface
+public interface UsersService {
+    Page<UsersDTO> getPage(Pageable pageable);
+    UsersDTO getUsersById(Long usersSeq);
+    UsersDTO createUsers(UsersDTO usersDTO, Authentication authentication);
+    UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Authentication authentication);
+    void deleteUsers(Long usersSeq, Authentication authentication);
+}
+
+// Service impl — Authentication에서 사용자 정보 추출
+@Service
+public class UsersServiceImpl implements UsersService {
+
+    private CustomUserDetails getCurrentUser(Authentication authentication) {
+        return (CustomUserDetails) authentication.getPrincipal();
+    }
+
+    @Override
+    public UsersDTO createUsers(UsersDTO usersDTO, Authentication authentication) {
+        CustomUserDetails currentUser = getCurrentUser(authentication);
+        usersDTO.setCreatedBy(currentUser.getUsersSeq().intValue());
+        usersDTO.setCreatedAt(LocalDateTime.now());
+        usersMapper.insert(usersDTO);
+        return usersMapper.selectById(usersDTO.getUsersSeq());
+    }
+
+    @Override
+    public void deleteUsers(Long usersSeq, Authentication authentication) {
+        CustomUserDetails currentUser = getCurrentUser(authentication);
+        UsersDTO users = usersMapper.selectById(usersSeq);
+        if (users == null) {
+            throw new RuntimeException("Users not found");
+        }
+        users.setIsDeleted('Y');
+        users.setDeletedAt(LocalDateTime.now());
+        users.setUpdatedBy(currentUser.getUsersSeq().intValue());
+        users.setUpdatedAt(LocalDateTime.now());
+        usersMapper.softDelete(users);
+    }
+}
+```
+
+### Controller에서 Authentication 전달
+```java
+@PostMapping("/create")
+public ResponseEntity<ApiResponse<UsersDTO>> createUsers(
+        @RequestBody UsersDTO usersDTO,
+        Authentication authentication) {
+    UsersDTO created = usersService.createUsers(usersDTO, authentication);
+    return ResponseEntity.ok(ApiResponse.success(created));
+}
+
+@PostMapping("/delete/{usersSeq}")
+public ResponseEntity<ApiResponse<Void>> deleteUsers(
+        @PathVariable Long usersSeq,
+        Authentication authentication) {
+    usersService.deleteUsers(usersSeq, authentication);
+    return ResponseEntity.ok(ApiResponse.success(null));
+}
+```
 
 ## Service 규칙
 
@@ -63,11 +282,11 @@ ORDER BY t.pk_column DESC
 ```java
 // Service interface
 public interface UsersService {
-    List<UsersDTO> getAllUsers();
+    Page<UsersDTO> getPage(Pageable pageable);
     UsersDTO getUsersById(Long usersSeq);
-    UsersDTO createUsers(UsersDTO usersDTO, Long createdBy);
-    UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Long updatedBy);
-    void deleteUsers(Long usersSeq, Long deletedBy);
+    UsersDTO createUsers(UsersDTO usersDTO, Authentication authentication);
+    UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Authentication authentication);
+    void deleteUsers(Long usersSeq, Authentication authentication);
 }
 
 // Service implementation
@@ -78,7 +297,8 @@ public class UsersServiceImpl implements UsersService { ... }
 ### 삭제 로직 (Soft Delete)
 ```java
 @Override
-public void deleteUsers(Long usersSeq, Long deletedBy) {
+public void deleteUsers(Long usersSeq, Authentication authentication) {
+    CustomUserDetails currentUser = getCurrentUser(authentication);
     UsersDTO users = usersMapper.selectById(usersSeq);
     if (users == null) {
         throw new RuntimeException("Users not found");
@@ -86,7 +306,7 @@ public void deleteUsers(Long usersSeq, Long deletedBy) {
     
     users.setIsDeleted('Y');
     users.setDeletedAt(LocalDateTime.now());
-    users.setUpdatedBy(deletedBy);
+    users.setUpdatedBy(currentUser.getUsersSeq().intValue());
     users.setUpdatedAt(LocalDateTime.now());
     usersMapper.softDelete(users);  // UPDATE 문으로 처리
 }
@@ -94,29 +314,13 @@ public void deleteUsers(Long usersSeq, Long deletedBy) {
 
 ## Controller 규칙
 
-### 로그인 사용자 정보
-```java
-@PostMapping
-public ResponseEntity<UsersDTO> createUsers(
-        @RequestBody UsersDTO usersDTO,
-        @RequestHeader("X-User-Id") Long createdBy) {
-    UsersDTO created = usersService.createUsers(usersDTO, createdBy);
-    return ResponseEntity.ok(created);
-}
-```
-
-- Header: `X-User-Id` (로그인 사용자의 users_seq)
-- Create: createdBy 파라미터 필수
-- Update: updatedBy 파라미터 필수
-- Delete: deletedBy 파라미터 필수
-
 ### RESTful API 패턴
 ```
-GET    /api/{feature-name}              -- 목록 조회
+GET    /api/{feature-name}/page         -- 목록 조회 (페이징)
 GET    /api/{feature-name}/{id}         -- 상세 조회
-POST   /api/{feature-name}              -- 생성
-PUT    /api/{feature-name}/{id}         -- 수정
-DELETE /api/{feature-name}/{id}         -- 삭제 (Soft Delete)
+POST   /api/{feature-name}/create       -- 생성
+POST   /api/{feature-name}/update/{id}  -- 수정
+POST   /api/{feature-name}/delete/{id}  -- 삭제 (Soft Delete)
 ```
 
 ## 구현 체크리스트
@@ -134,7 +338,7 @@ DELETE /api/{feature-name}/{id}         -- 삭제 (Soft Delete)
 - [ ] 모든 SQL 검증 (alias, 컬럼명 명시, 포맷팅)
 - [ ] 공통 컬럼 포함 확인
 - [ ] Soft Delete 로직 확인
-- [ ] X-User-Id Header 사용 확인
+- [ ] Authentication 주입으로 사용자 정보 처리 확인
 
 ## 실행 예
 
@@ -151,4 +355,4 @@ DELETE /api/{feature-name}/{id}         -- 삭제 (Soft Delete)
    - OrdersController
 5. 모든 SQL: alias 'o' 사용, 컬럼명 명시, 포맷팅
 6. Soft Delete용 별도 UPDATE 쿼리
-7. X-User-Id Header로 작업자 정보 처리
+7. Authentication 주입으로 작업자 정보 처리

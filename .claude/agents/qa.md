@@ -289,70 +289,97 @@ model: haiku
   ✗ @Service interface UsersService
   ```
 
-#### 메서드 시그니처
-- [ ] Create: createdBy 파라미터
+#### 메서드 시그니처 (Authentication 주입)
+- [ ] Create: Authentication 파라미터
   ```java
-  ✓ UsersDTO createUsers(UsersDTO usersDTO, Long createdBy);
+  ✓ UsersDTO createUsers(UsersDTO usersDTO, Authentication authentication);
+  ✗ UsersDTO createUsers(UsersDTO usersDTO, Long createdBy);
   ✗ UsersDTO createUsers(UsersDTO usersDTO);
   ```
 
-- [ ] Update: updatedBy 파라미터
+- [ ] Update: Authentication 파라미터
   ```java
-  ✓ UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Long updatedBy);
-  ✗ UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO);
+  ✓ UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Authentication authentication);
+  ✗ UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Long updatedBy);
   ```
 
-- [ ] Delete: deletedBy 파라미터
+- [ ] Delete: Authentication 파라미터
   ```java
-  ✓ void deleteUsers(Long usersSeq, Long deletedBy);
-  ✗ void deleteUsers(Long usersSeq);
+  ✓ void deleteUsers(Long usersSeq, Authentication authentication);
+  ✗ void deleteUsers(Long usersSeq, Long deletedBy);
+  ```
+
+- [ ] ServiceImpl에 getCurrentUser 헬퍼 메서드 존재
+  ```java
+  ✓ private CustomUserDetails getCurrentUser(Authentication authentication) {
+        return (CustomUserDetails) authentication.getPrincipal();
+    }
   ```
 
 #### Soft Delete 로직
 - [ ] setIsDeleted('Y')
 - [ ] setDeletedAt(LocalDateTime.now())
-- [ ] setUpdatedBy(deletedBy)
+- [ ] setUpdatedBy(currentUser.getUsersSeq().intValue())  — Authentication에서 추출
 - [ ] setUpdatedAt(LocalDateTime.now())
 - [ ] `mapper.softDelete(user)` 호출 (update 아님)
 
 ### 3️⃣ Controller 검증
 
-#### 로그인 사용자 정보
-- [ ] @RequestHeader("X-User-Id") Long createdBy
-- [ ] @RequestHeader("X-User-Id") Long updatedBy
-- [ ] @RequestHeader("X-User-Id") Long deletedBy
-
-- [ ] Create에서 필수
+#### 의존성 주입 규칙
+- [ ] Controller에서 Mapper 직접 주입 금지
   ```java
-  ✓ @PostMapping
-    public ResponseEntity<UsersDTO> createUsers(
-            @RequestBody UsersDTO usersDTO,
-            @RequestHeader("X-User-Id") Long createdBy) { ... }
+  ✗ @Autowired private UsersMapper usersMapper;  (Controller에서 Mapper 직접 주입 금지)
+  ✓ @Autowired private UsersService usersService; (Controller는 Service만 주입)
+  ```
+- [ ] Controller → Service만 주입
+- [ ] ServiceImpl → Mapper만 주입
+
+#### 로그인 사용자 정보 (Spring Security)
+- [ ] `@RequestHeader("X-User-Id")` 사용 금지
+  ```java
+  ✗ @RequestHeader("X-User-Id") Long createdBy  (절대 사용 금지)
   ```
 
-- [ ] Update에서 필수
+- [ ] Controller에서 Authentication 파라미터로 수신하여 Service에 전달
   ```java
-  ✓ @PutMapping("/{usersSeq}")
-    public ResponseEntity<UsersDTO> updateUsers(
+  ✓ @PostMapping("/create")
+    public ResponseEntity<ApiResponse<UsersDTO>> createUsers(
+            @RequestBody UsersDTO usersDTO,
+            Authentication authentication) {
+        UsersDTO created = usersService.createUsers(usersDTO, authentication);
+        return ResponseEntity.ok(ApiResponse.success(created));
+    }
+  ```
+
+- [ ] Update에서 Authentication 전달
+  ```java
+  ✓ @PostMapping("/update/{usersSeq}")
+    public ResponseEntity<ApiResponse<UsersDTO>> updateUsers(
             @PathVariable Long usersSeq,
             @RequestBody UsersDTO usersDTO,
-            @RequestHeader("X-User-Id") Long updatedBy) { ... }
+            Authentication authentication) { ... }
   ```
 
-- [ ] Delete에서 필수
+- [ ] Delete에서 Authentication 전달
   ```java
-  ✓ @DeleteMapping("/{usersSeq}")
-    public ResponseEntity<Void> deleteUsers(
+  ✓ @PostMapping("/delete/{usersSeq}")
+    public ResponseEntity<ApiResponse<Void>> deleteUsers(
             @PathVariable Long usersSeq,
-            @RequestHeader("X-User-Id") Long deletedBy) { ... }
+            Authentication authentication) { ... }
   ```
 
-#### RESTful API
-- [ ] GET /api/{feature-name} (목록)
+#### Spring Security 필수 구성 요소
+- [ ] `JwtAuthenticationFilter` 존재 (OncePerRequestFilter 상속)
+- [ ] `CustomUserDetails` 존재 (UserDetails 구현, usersSeq/id/name 필드)
+- [ ] `JwtTokenProvider` 존재 (토큰 생성/검증/파싱)
+- [ ] SecurityContextHolder에 Authentication 세팅 확인
+
+#### RESTful API (GET, POST only)
+- [ ] GET /api/{feature-name}/page (목록 - 페이징)
 - [ ] GET /api/{feature-name}/{id} (상세)
-- [ ] POST /api/{feature-name} (생성)
-- [ ] PUT /api/{feature-name}/{id} (수정)
-- [ ] DELETE /api/{feature-name}/{id} (삭제)
+- [ ] POST /api/{feature-name}/create (생성)
+- [ ] POST /api/{feature-name}/update/{id} (수정)
+- [ ] POST /api/{feature-name}/delete/{id} (삭제)
 
 ### 4️⃣ 패키지 구조 검증
 
