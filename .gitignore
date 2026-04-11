@@ -144,3 +144,6 @@ reports/
 reports/**/*
 **/.idea
 .claude/settings.local.json
+.idea/
+.idea/**
+
