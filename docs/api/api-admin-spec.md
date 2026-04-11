@@ -915,6 +915,183 @@ POST /api/admin-role-menus/delete/{adminRoleMenusSeq}
 
 ---
 
+## 9. 첨부파일 (File)
+
+> 첨부파일 콘텐츠/다운로드 파라미터는 반드시 **마스터 번호(attachmentsSeq) + 디테일 번호(attachmentFilesSeq)**로만 전달한다.
+> 파일명, 파일 경로, MIME 타입 등은 파라미터에 **절대 포함하지 않는다** (보안 규칙).
+
+### 9-1. 파일 업로드
+
+```
+POST /api/file/upload (multipart/form-data)
+```
+
+**Request (multipart/form-data)**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| targetTable | String | Y | 첨부 대상 테이블명 (예: `users`, `boards`) |
+| targetSeq | Long | Y | 첨부 대상 테이블의 PK 값 |
+| files | MultipartFile[] | Y | 업로드할 파일 (복수 가능) |
+
+**Response** `ApiResponse<AttachmentsDTO>`
+```json
+{
+  "status": "success",
+  "data": {
+    "attachmentsSeq": 5,
+    "targetTable": "boards",
+    "targetSeq": 1,
+    "isDeleted": "N",
+    "createdBy": 1,
+    "createdAt": "2026-04-11T14:30:00",
+    "files": [
+      {
+        "attachmentFilesSeq": 1,
+        "attachmentsSeq": 5,
+        "originalName": "profile.png",
+        "storedName": "a1b2c3d4-uuid.png",
+        "filePath": "/uploads/2026/04",
+        "fileSize": 204800,
+        "fileExt": "png",
+        "mimeType": "image/png",
+        "orderSeq": 0
+      },
+      {
+        "attachmentFilesSeq": 2,
+        "attachmentsSeq": 5,
+        "originalName": "document.pdf",
+        "storedName": "e5f6g7h8-uuid.pdf",
+        "filePath": "/uploads/2026/04",
+        "fileSize": 1048576,
+        "fileExt": "pdf",
+        "mimeType": "application/pdf",
+        "orderSeq": 1
+      }
+    ]
+  }
+}
+```
+
+### 9-2. 파일 콘텐츠 보기
+
+```
+GET /api/file/content?attachmentsSeq={마스터번호}&attachmentFilesSeq={디테일번호}
+```
+
+> 전략 패턴에 따라 파일 확장자별로 Content-Type이 결정된다.
+> - **이미지** (png, jpg, jpeg, gif, svg): `image/*` — inline 표시
+> - **PDF**: `application/pdf` — inline 표시
+> - **기타**: `application/octet-stream` — 다운로드 fallback
+
+**Query Parameters**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| attachmentsSeq | Long | Y | 첨부파일 마스터 번호 |
+| attachmentFilesSeq | Long | Y | 첨부파일 디테일 번호 |
+
+**Response**: 파일 바이너리 (Content-Type은 전략 패턴에 의해 결정)
+
+**404 반환 조건**:
+- `attachments` 레코드의 `is_deleted = 'Y'`
+- `attachment_files` 레코드의 `is_deleted = 'Y'`
+- `attachments` 또는 `attachment_files` 레코드가 존재하지 않음
+- Master-Detail 관계 불일치 (다른 마스터의 디테일 번호)
+- 파일 시스템에 파일이 존재하지 않음
+
+**FE 사용 예시**:
+```html
+<img src="/api/file/content?attachmentsSeq=5&attachmentFilesSeq=1" onerror="onError(this)" />
+```
+
+### 9-3. 파일 다운로드
+
+```
+GET /api/file/download?attachmentsSeq={마스터번호}&attachmentFilesSeq={디테일번호}
+```
+
+> 확장자에 관계없이 항상 `Content-Disposition: attachment`로 강제 다운로드한다.
+
+**Query Parameters**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| attachmentsSeq | Long | Y | 첨부파일 마스터 번호 |
+| attachmentFilesSeq | Long | Y | 첨부파일 디테일 번호 |
+
+**Response**: 파일 바이너리
+```
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="원본파일명.확장자"
+```
+
+**404 반환 조건**: 콘텐츠 보기와 동일
+
+### 9-4. 첨부파일 목록 조회 (마스터 기준)
+
+```
+GET /api/file/list?attachmentsSeq={마스터번호}
+```
+
+**Query Parameters**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| attachmentsSeq | Long | Y | 첨부파일 마스터 번호 |
+
+**Response** `ApiResponse<List<AttachmentFilesDTO>>`
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "attachmentFilesSeq": 1,
+      "attachmentsSeq": 5,
+      "originalName": "profile.png",
+      "fileSize": 204800,
+      "fileExt": "png",
+      "mimeType": "image/png",
+      "orderSeq": 0,
+      "createdAt": "2026-04-11T14:30:00"
+    },
+    {
+      "attachmentFilesSeq": 2,
+      "attachmentsSeq": 5,
+      "originalName": "document.pdf",
+      "fileSize": 1048576,
+      "fileExt": "pdf",
+      "mimeType": "application/pdf",
+      "orderSeq": 1,
+      "createdAt": "2026-04-11T14:30:00"
+    }
+  ]
+}
+```
+
+### 9-5. 개별 파일 삭제 (Soft Delete)
+
+```
+POST /api/file/delete?attachmentsSeq={마스터번호}&attachmentFilesSeq={디테일번호}
+```
+
+**Query Parameters**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| attachmentsSeq | Long | Y | 첨부파일 마스터 번호 |
+| attachmentFilesSeq | Long | Y | 첨부파일 디테일 번호 |
+
+**Response** `ApiResponse<Void>`
+```json
+{
+  "status": "success",
+  "data": null
+}
+```
+
+---
+
 ## API 엔드포인트 요약
 
 | # | Method | URL | 설명 |
@@ -964,3 +1141,9 @@ POST /api/admin-role-menus/delete/{adminRoleMenusSeq}
 | 33 | GET | `/api/admin-role-menus/page` | 역할별 메뉴 목록 |
 | 34 | POST | `/api/admin-role-menus/save` | 역할-메뉴 일괄 저장 |
 | 35 | POST | `/api/admin-role-menus/delete/{adminRoleMenusSeq}` | 역할-메뉴 삭제 |
+| **File (첨부파일)** |
+| 36 | POST | `/api/file/upload` | 파일 업로드 (multipart) |
+| 37 | GET | `/api/file/content?attachmentsSeq=&attachmentFilesSeq=` | 파일 콘텐츠 보기 (전략 패턴) |
+| 38 | GET | `/api/file/download?attachmentsSeq=&attachmentFilesSeq=` | 파일 다운로드 (강제) |
+| 39 | GET | `/api/file/list?attachmentsSeq=` | 첨부파일 목록 (마스터 기준) |
+| 40 | POST | `/api/file/delete?attachmentsSeq=&attachmentFilesSeq=` | 파일 삭제 (Soft Delete) |

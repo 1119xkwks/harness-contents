@@ -418,6 +418,14 @@ model: haiku
 - [ ] POST /api/{feature-name}/update/{id} (수정)
 - [ ] POST /api/{feature-name}/delete/{id} (삭제)
 
+#### API 명세 일치 검증 (`docs/api/api-admin-spec.md`)
+- [ ] 구현된 엔드포인트 URL이 `api-admin-spec.md`에 정의된 URL과 정확히 일치
+- [ ] HTTP Method(GET/POST)가 명세와 일치
+- [ ] 요청 파라미터(Query Parameter, Request Body)가 명세와 일치
+- [ ] 응답 형식(`ApiResponse<T>`)이 명세와 일치
+- [ ] 페이징 엔드포인트는 URL에 `/page` 포함 여부 확인
+- [ ] 첨부파일 엔드포인트가 명세의 섹션 9와 일치 (content, download, upload, list, delete)
+
 ### 4️⃣ 패키지 구조 검증
 
 #### 패키지 명명
@@ -464,6 +472,103 @@ model: haiku
 - [ ] @Data (Lombok)
 - [ ] @NoArgsConstructor
 - [ ] @AllArgsConstructor
+
+---
+
+## 📋 PART 3: 첨부파일 (File) 보안 검증
+
+### 1️⃣ 파라미터 보안 검증
+
+#### 콘텐츠/다운로드 파라미터 — 마스터/디테일 번호만 허용
+- [ ] `/api/file/content` 파라미터가 `attachmentsSeq` + `attachmentFilesSeq`만 사용
+  ```
+  ✓ GET /api/file/content?attachmentsSeq=5&attachmentFilesSeq=1
+  ✗ GET /api/file/content?fileName=test.png
+  ✗ GET /api/file/content?filePath=/uploads/2026/test.png
+  ✗ GET /api/file/content?attachmentFilesSeq=1 (마스터 번호 누락 금지)
+  ```
+
+- [ ] `/api/file/download` 파라미터가 `attachmentsSeq` + `attachmentFilesSeq`만 사용
+  ```
+  ✓ GET /api/file/download?attachmentsSeq=5&attachmentFilesSeq=1
+  ✗ GET /api/file/download?originalName=test.png
+  ✗ GET /api/file/download?storedName=uuid-xxx.png
+  ✗ GET /api/file/download?path=/uploads/test.png
+  ```
+
+- [ ] `/api/file/delete` 파라미터가 `attachmentsSeq` + `attachmentFilesSeq`만 사용
+  ```
+  ✓ POST /api/file/delete?attachmentsSeq=5&attachmentFilesSeq=1
+  ✗ POST /api/file/delete?filePath=/uploads/test.png
+  ```
+
+- [ ] 파일명(originalName, storedName)이 요청 파라미터에 **절대** 포함되지 않음
+- [ ] 파일 경로(filePath)가 요청 파라미터에 **절대** 포함되지 않음
+- [ ] MIME 타입이 요청 파라미터에 포함되지 않음
+
+### 2️⃣ 404 응답 검증
+
+- [ ] `attachments` 레코드 `is_deleted = 'Y'` → HTTP 404
+- [ ] `attachment_files` 레코드 `is_deleted = 'Y'` → HTTP 404
+- [ ] `attachments` 레코드 없음 → HTTP 404
+- [ ] `attachment_files` 레코드 없음 → HTTP 404
+- [ ] 파일 시스템에 파일 없음 (File Not Found) → HTTP 404
+- [ ] Master-Detail 관계 불일치 (다른 마스터의 디테일 번호) → HTTP 404
+
+### 3️⃣ 전략 패턴 검증
+
+- [ ] `FileContentStrategy` 인터페이스 존재
+  ```java
+  ✓ boolean supports(String fileExt);
+  ✓ ResponseEntity<Resource> serve(AttachmentFilesDTO file);
+  ```
+
+- [ ] `ImageContentStrategy` — png, jpg, jpeg, gif, svg 지원
+  ```
+  ✓ Content-Type: image/png, image/jpeg, image/svg+xml 등
+  ✓ inline 표시 (Content-Disposition 없음 또는 inline)
+  ```
+
+- [ ] `PdfContentStrategy` — pdf 지원
+  ```
+  ✓ Content-Type: application/pdf
+  ✓ Content-Disposition: inline
+  ```
+
+- [ ] `DefaultContentStrategy` — 기타 확장자 fallback
+  ```
+  ✓ Content-Type: application/octet-stream
+  ✓ Content-Disposition: attachment
+  ```
+
+- [ ] 전략 선택 순서: ImageContent → PdfContent → Default (Default는 항상 최후순위)
+
+### 4️⃣ 패키지 구조 검증
+
+- [ ] `file/controller/FileController.java` 존재
+- [ ] `file/service/FileService.java` (interface) 존재
+- [ ] `file/service/impl/FileServiceImpl.java` 존재
+- [ ] `file/mapper/FileMapper.java` 존재
+- [ ] `file/dto/AttachmentsDTO.java` 존재
+- [ ] `file/dto/AttachmentFilesDTO.java` 존재
+- [ ] `file/strategy/` 디렉토리에 전략 클래스 존재
+
+### 5️⃣ FE 첨부파일 사용 검증
+
+- [ ] 이미지 표시 시 `<img src>` 에 마스터/디테일 번호만 사용
+  ```html
+  ✓ <img src="/api/file/content?attachmentsSeq=5&attachmentFilesSeq=1" onerror="onError(this)" />
+  ✗ <img src="/api/file/content?fileName=test.png" />
+  ✗ <img src="/uploads/2026/test.png" /> (직접 경로 접근 금지)
+  ```
+
+- [ ] 다운로드 링크에 마스터/디테일 번호만 사용
+  ```html
+  ✓ <a href="/api/file/download?attachmentsSeq=5&attachmentFilesSeq=1">다운로드</a>
+  ✗ <a href="/api/file/download?filePath=/uploads/test.pdf">다운로드</a>
+  ```
+
+- [ ] onerror 핸들러로 404 이미지 대체 처리
 
 ---
 

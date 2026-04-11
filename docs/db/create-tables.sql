@@ -273,7 +273,102 @@ COMMENT ON COLUMN admin_role_menus.updated_at IS '수정 일시';
 CREATE INDEX idx_admin_role_menus ON admin_role_menus(admin_roles_seq, admin_menus_seq);
 
 -- ============================================================
--- 7. INITIAL DATA (초기 데이터)
+-- 7. ATTACHMENTS TABLE (첨부파일 마스터 테이블)
+-- ============================================================
+
+-- SEQUENCE 생성
+CREATE SEQUENCE seq_attachments
+  START WITH 1
+  INCREMENT BY 1
+  NO MINVALUE
+  CACHE 1;
+
+-- 테이블 생성
+CREATE TABLE attachments (
+  attachments_seq BIGINT PRIMARY KEY DEFAULT nextval('seq_attachments'),
+  target_table VARCHAR(100) NOT NULL,
+  target_seq BIGINT NOT NULL,
+  is_deleted CHAR(1) DEFAULT 'N' NOT NULL,
+  deleted_at TIMESTAMP,
+  created_by INT NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_by INT,
+  updated_at TIMESTAMP
+);
+
+-- 테이블 코멘트
+COMMENT ON TABLE attachments IS '첨부파일 마스터 테이블. 대상 테이블과 대상 PK를 기준으로 첨부파일 그룹을 관리';
+
+-- 컬럼 코멘트
+COMMENT ON COLUMN attachments.attachments_seq IS '첨부파일 마스터 고유 식별자';
+COMMENT ON COLUMN attachments.target_table IS '첨부 대상 테이블명 (예: users, admin_menus)';
+COMMENT ON COLUMN attachments.target_seq IS '첨부 대상 테이블의 PK 값';
+COMMENT ON COLUMN attachments.is_deleted IS '삭제 여부 (Y/N)';
+COMMENT ON COLUMN attachments.deleted_at IS '삭제 일시';
+COMMENT ON COLUMN attachments.created_by IS '작성자 ID';
+COMMENT ON COLUMN attachments.created_at IS '작성 일시';
+COMMENT ON COLUMN attachments.updated_by IS '수정자 ID';
+COMMENT ON COLUMN attachments.updated_at IS '수정 일시';
+
+-- 인덱스 생성
+CREATE INDEX idx_attachments ON attachments(target_table, target_seq);
+
+-- ============================================================
+-- 8. ATTACHMENT_FILES TABLE (첨부파일 상세 테이블)
+-- ============================================================
+
+-- SEQUENCE 생성
+CREATE SEQUENCE seq_attachment_files
+  START WITH 1
+  INCREMENT BY 1
+  NO MINVALUE
+  CACHE 1;
+
+-- 테이블 생성
+CREATE TABLE attachment_files (
+  attachment_files_seq BIGINT PRIMARY KEY DEFAULT nextval('seq_attachment_files'),
+  attachments_seq BIGINT NOT NULL,
+  original_name VARCHAR(500) NOT NULL,
+  stored_name VARCHAR(500) NOT NULL,
+  file_path VARCHAR(1000) NOT NULL,
+  file_size BIGINT NOT NULL DEFAULT 0,
+  file_ext VARCHAR(50),
+  mime_type VARCHAR(200),
+  order_seq INT NOT NULL DEFAULT 0,
+  is_deleted CHAR(1) DEFAULT 'N' NOT NULL,
+  deleted_at TIMESTAMP,
+  created_by INT NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_by INT,
+  updated_at TIMESTAMP,
+  CONSTRAINT uni_attachment_files UNIQUE (attachment_files_seq, attachments_seq)
+);
+
+-- 테이블 코멘트
+COMMENT ON TABLE attachment_files IS '첨부파일 상세 테이블. 하나의 마스터(attachments)에 여러 개의 파일이 매핑되는 구조';
+
+-- 컬럼 코멘트
+COMMENT ON COLUMN attachment_files.attachment_files_seq IS '첨부파일 상세 고유 식별자';
+COMMENT ON COLUMN attachment_files.attachments_seq IS '첨부파일 마스터 식별자 (attachments 참조)';
+COMMENT ON COLUMN attachment_files.original_name IS '원본 파일명';
+COMMENT ON COLUMN attachment_files.stored_name IS '저장 파일명 (UUID 등 중복 방지용)';
+COMMENT ON COLUMN attachment_files.file_path IS '파일 저장 경로';
+COMMENT ON COLUMN attachment_files.file_size IS '파일 크기 (bytes)';
+COMMENT ON COLUMN attachment_files.file_ext IS '파일 확장자 (예: jpg, pdf, xlsx)';
+COMMENT ON COLUMN attachment_files.mime_type IS 'MIME 타입 (예: image/png, application/pdf)';
+COMMENT ON COLUMN attachment_files.order_seq IS '파일 정렬 순서';
+COMMENT ON COLUMN attachment_files.is_deleted IS '삭제 여부 (Y/N)';
+COMMENT ON COLUMN attachment_files.deleted_at IS '삭제 일시';
+COMMENT ON COLUMN attachment_files.created_by IS '작성자 ID';
+COMMENT ON COLUMN attachment_files.created_at IS '작성 일시';
+COMMENT ON COLUMN attachment_files.updated_by IS '수정자 ID';
+COMMENT ON COLUMN attachment_files.updated_at IS '수정 일시';
+
+-- 인덱스 생성
+CREATE INDEX idx_attachment_files ON attachment_files(attachments_seq, order_seq);
+
+-- ============================================================
+-- 9. INITIAL DATA (초기 데이터)
 -- ============================================================
 
 /*
@@ -346,37 +441,37 @@ VALUES (2, 5, 'N', 1, NOW());
 */
 
 -- ============================================================
--- 8. CONSTRAINTS VERIFICATION
+-- 10. CONSTRAINTS VERIFICATION
 -- ============================================================
 
 -- Constraint 확인
 SELECT constraint_name, constraint_type, table_name
 FROM information_schema.table_constraints
-WHERE table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus')
+WHERE table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus', 'attachments', 'attachment_files')
 ORDER BY table_name, constraint_name;
 
 -- ============================================================
--- 9. SEQUENCE VERIFICATION
+-- 11. SEQUENCE VERIFICATION
 -- ============================================================
 
 -- SEQUENCE 확인
 SELECT sequence_name, start_value, increment_by, cache_size
 FROM information_schema.sequences
-WHERE sequence_name IN ('seq_users', 'seq_common_codes', 'seq_admin_menus', 'seq_admin_roles', 'seq_admin_role_users', 'seq_admin_role_menus')
+WHERE sequence_name IN ('seq_users', 'seq_common_codes', 'seq_admin_menus', 'seq_admin_roles', 'seq_admin_role_users', 'seq_admin_role_menus', 'seq_attachments', 'seq_attachment_files')
 ORDER BY sequence_name;
 
 -- ============================================================
--- 10. TABLE & COLUMN COMMENTS VERIFICATION
+-- 12. TABLE & COLUMN COMMENTS VERIFICATION
 -- ============================================================
 
 -- 테이블 코멘트 확인
 SELECT table_name, obj_description(('public.' || table_name)::regclass, 'pg_class') AS table_comment
 FROM information_schema.tables
-WHERE table_schema = 'public' AND table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus')
+WHERE table_schema = 'public' AND table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus', 'attachments', 'attachment_files')
 ORDER BY table_name;
 
 -- 컬럼 코멘트 확인
 SELECT table_name, column_name, col_description((table_name)::regclass, ordinal_position) AS column_comment
 FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus')
+WHERE table_schema = 'public' AND table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus', 'attachments', 'attachment_files')
 ORDER BY table_name, ordinal_position;

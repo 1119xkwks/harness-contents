@@ -13,6 +13,7 @@ color: blue
 
 사용자가 새로운 기능(Feature)을 요청하면, 다음 규칙에 따라 완전한 백엔드 구현을 생성합니다:
 - **`docs/db/create-tables.sql`의 테이블 구조를 반드시 참조하여 개발** (컬럼명, 타입, 관계 등)
+- **`docs/api/api-admin-spec.md`의 API 명세를 반드시 참조하여 개발** (엔드포인트 URL, Method, 요청/응답 형식, 파라미터 등)
 - REST API 엔드포인트 설계 및 구현
 - 데이터베이스 스키마 정의
 - MyBatis 매퍼 및 SQL 작성
@@ -339,6 +340,256 @@ POST   /api/{feature-name}/delete/{id}  -- 삭제 (Soft Delete)
 - [ ] 공통 컬럼 포함 확인
 - [ ] Soft Delete 로직 확인
 - [ ] Authentication 주입으로 사용자 정보 처리 확인
+
+## 첨부파일 전용 로직 (File)
+
+첨부파일은 일반 Feature와 별도로 `file` 패키지에서 전담 처리한다. 다른 Feature의 Controller/Service에서 첨부파일 로직을 직접 구현하지 않는다.
+
+### 패키지 구조
+
+```
+proj/be-admin/src/main/java/com/harness/beadmin/
+├── file/
+│   ├── controller/FileController.java
+│   ├── service/FileService.java (interface)
+│   ├── service/impl/FileServiceImpl.java
+│   ├── mapper/FileMapper.java
+│   ├── dto/AttachmentsDTO.java
+│   ├── dto/AttachmentFilesDTO.java
+│   └── strategy/
+│       ├── FileContentStrategy.java (interface)
+│       ├── ImageContentStrategy.java (png, jpg, jpeg, gif, svg)
+│       ├── PdfContentStrategy.java (pdf)
+│       └── DefaultContentStrategy.java (기타 → 다운로드 fallback)
+```
+
+### DB 테이블 참조
+
+- **Master**: `attachments` — 대상 테이블/PK 기준 첨부파일 그룹 관리
+- **Detail**: `attachment_files` — 개별 파일 메타 (원본명, 저장명, 경로, 크기, 확장자, MIME)
+- 관계: `attachments (1) : attachment_files (N)`
+
+### 핵심 규칙
+
+#### 1. 파라미터는 반드시 마스터/디테일 번호로만 전달
+```
+✓ attachmentsSeq + attachmentFilesSeq (PK 조합)
+✗ 파일명, 파일 경로가 파라미터에 포함되면 안 됨 (보안 위험)
+```
+
+#### 2. 콘텐츠 조회 / 다운로드 엔드포인트
+```
+GET /api/file/content?attachmentsSeq={마스터번호}&attachmentFilesSeq={디테일번호}
+GET /api/file/download?attachmentsSeq={마스터번호}&attachmentFilesSeq={디테일번호}
+```
+
+FE에서의 사용 예시:
+```html
+<img src="/api/file/content?attachmentsSeq=5&attachmentFilesSeq=1" onerror="onError(this)" />
+```
+
+#### 3. 404 응답 조건
+다음 중 하나라도 해당하면 **HTTP 404** 반환:
+- `attachments` 레코드의 `is_deleted = 'Y'`
+- `attachment_files` 레코드의 `is_deleted = 'Y'`
+- `attachments` 또는 `attachment_files` 레코드가 존재하지 않음
+- 실제 파일 시스템에 파일이 존재하지 않음 (File Not Found)
+
+#### 4. 전략 패턴 (Strategy Pattern) — 콘텐츠 타입별 응답
+
+파일 확장자(또는 MIME 타입)에 따라 응답 Content-Type과 처리 방식을 전략 패턴으로 분기한다.
+
+```java
+// 전략 인터페이스
+public interface FileContentStrategy {
+    boolean supports(String fileExt);
+    ResponseEntity<Resource> serve(AttachmentFilesDTO file) throws IOException;
+}
+
+// 이미지 전략 (png, jpg, jpeg, gif, svg)
+@Component
+public class ImageContentStrategy implements FileContentStrategy {
+    @Override
+    public boolean supports(String fileExt) {
+        return List.of("png", "jpg", "jpeg", "gif", "svg").contains(fileExt.toLowerCase());
+    }
+
+    @Override
+    public ResponseEntity<Resource> serve(AttachmentFilesDTO file) throws IOException {
+        Resource resource = new FileSystemResource(file.getFilePath() + "/" + file.getStoredName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.getMimeType()))
+                .body(resource);
+    }
+}
+
+// PDF 전략
+@Component
+public class PdfContentStrategy implements FileContentStrategy {
+    @Override
+    public boolean supports(String fileExt) {
+        return "pdf".equalsIgnoreCase(fileExt);
+    }
+
+    @Override
+    public ResponseEntity<Resource> serve(AttachmentFilesDTO file) throws IOException {
+        Resource resource = new FileSystemResource(file.getFilePath() + "/" + file.getStoredName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getOriginalName() + "\"")
+                .body(resource);
+    }
+}
+
+// 기본 전략 (지원하지 않는 확장자 → 다운로드 fallback)
+@Component
+public class DefaultContentStrategy implements FileContentStrategy {
+    @Override
+    public boolean supports(String fileExt) {
+        return true; // 항상 매칭 (최후순위)
+    }
+
+    @Override
+    public ResponseEntity<Resource> serve(AttachmentFilesDTO file) throws IOException {
+        Resource resource = new FileSystemResource(file.getFilePath() + "/" + file.getStoredName());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getOriginalName() + "\"")
+                .body(resource);
+    }
+}
+```
+
+#### 5. FileServiceImpl — 전략 선택
+
+```java
+@Service
+public class FileServiceImpl implements FileService {
+
+    @Autowired
+    private FileMapper fileMapper;
+
+    @Autowired
+    private List<FileContentStrategy> strategies;
+
+    @Override
+    public ResponseEntity<Resource> getContent(Long attachmentsSeq, Long attachmentFilesSeq) {
+        // 1) Master 조회 → 없거나 삭제 → 404
+        AttachmentsDTO master = fileMapper.selectAttachmentsById(attachmentsSeq);
+        if (master == null || "Y".equals(String.valueOf(master.getIsDeleted()))) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 2) Detail 조회 → 없거나 삭제 → 404
+        AttachmentFilesDTO detail = fileMapper.selectAttachmentFilesById(attachmentFilesSeq);
+        if (detail == null || "Y".equals(String.valueOf(detail.getIsDeleted()))) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 3) Master-Detail 관계 검증
+        if (!detail.getAttachmentsSeq().equals(attachmentsSeq)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 4) 파일 시스템 존재 확인 → 없으면 404
+        File physicalFile = new File(detail.getFilePath(), detail.getStoredName());
+        if (!physicalFile.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 5) 전략 패턴으로 Content-Type 결정 및 응답
+        return strategies.stream()
+                .filter(s -> s.supports(detail.getFileExt()))
+                .findFirst()
+                .orElseThrow()
+                .serve(detail);
+    }
+}
+```
+
+#### 6. FileController
+
+```java
+@RestController
+@RequestMapping("/api/file")
+public class FileController {
+
+    @Autowired
+    private FileService fileService;
+
+    // 파일 업로드 (마스터 생성 + 파일 저장)
+    @PostMapping("/upload")
+    public ResponseEntity<ApiResponse<AttachmentsDTO>> upload(
+            @RequestParam("targetTable") String targetTable,
+            @RequestParam("targetSeq") Long targetSeq,
+            @RequestParam("files") List<MultipartFile> files,
+            Authentication authentication) {
+        AttachmentsDTO result = fileService.upload(targetTable, targetSeq, files, authentication);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    // 파일 콘텐츠 보기 (이미지 inline, PDF inline, 기타 다운로드)
+    @GetMapping("/content")
+    public ResponseEntity<Resource> content(
+            @RequestParam("attachmentsSeq") Long attachmentsSeq,
+            @RequestParam("attachmentFilesSeq") Long attachmentFilesSeq) {
+        return fileService.getContent(attachmentsSeq, attachmentFilesSeq);
+    }
+
+    // 파일 다운로드 (강제 다운로드)
+    @GetMapping("/download")
+    public ResponseEntity<Resource> download(
+            @RequestParam("attachmentsSeq") Long attachmentsSeq,
+            @RequestParam("attachmentFilesSeq") Long attachmentFilesSeq) {
+        return fileService.download(attachmentsSeq, attachmentFilesSeq);
+    }
+
+    // 첨부파일 목록 조회 (마스터 기준)
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<AttachmentFilesDTO>>> list(
+            @RequestParam("attachmentsSeq") Long attachmentsSeq) {
+        List<AttachmentFilesDTO> list = fileService.getFileList(attachmentsSeq);
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    // 개별 파일 삭제 (Soft Delete)
+    @PostMapping("/delete")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @RequestParam("attachmentsSeq") Long attachmentsSeq,
+            @RequestParam("attachmentFilesSeq") Long attachmentFilesSeq,
+            Authentication authentication) {
+        fileService.deleteFile(attachmentsSeq, attachmentFilesSeq, authentication);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+}
+```
+
+#### 7. FileMapper 메서드
+
+```java
+@Mapper
+public interface FileMapper {
+    AttachmentsDTO selectAttachmentsById(Long attachmentsSeq);
+    AttachmentFilesDTO selectAttachmentFilesById(Long attachmentFilesSeq);
+    List<AttachmentFilesDTO> selectFilesByAttachmentsSeq(Long attachmentsSeq);
+    void insertAttachments(AttachmentsDTO attachmentsDTO);
+    void insertAttachmentFiles(AttachmentFilesDTO attachmentFilesDTO);
+    void softDeleteAttachments(AttachmentsDTO attachmentsDTO);
+    void softDeleteAttachmentFiles(AttachmentFilesDTO attachmentFilesDTO);
+}
+```
+
+### 다른 Feature에서 첨부파일 연동
+
+다른 Feature에서 첨부파일을 사용할 때는 `attachments_seq`를 저장하거나, `target_table` + `target_seq` 조합으로 FileService를 통해 조회한다. 직접 attachment_files 테이블을 조회하지 않는다.
+
+```java
+// 예: 게시판 상세 조회에서 첨부파일 목록 포함
+BoardDTO board = boardMapper.selectById(boardSeq);
+List<AttachmentFilesDTO> files = fileService.getFileList(board.getAttachmentsSeq());
+```
+
+---
 
 ## 실행 예
 

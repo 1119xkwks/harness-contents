@@ -12,6 +12,10 @@ color: cyan
 
 ## 책임
 
+### 필수 참조 문서
+- **`docs/ui/page-menu-admin.md`의 페이지 유형 정의를 반드시 참조하여 개발** (페이지별 URL, 유형, 구성 요소, 테이블 컬럼, 폼 필드, API 연동 등)
+- **`docs/api/api-admin-spec.md`의 API 명세를 반드시 참조하여 개발** (엔드포인트 URL, 요청/응답 형식 등)
+
 ### 프로젝트 구조 검증
 - Next.js 14+ 프로젝트 구조 확인 (proj/fe-admin)
 - 필수 패키지 설치 여부 확인 (React, Next.js, MUI, @emotion/react, @emotion/styled)
