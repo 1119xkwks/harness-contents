@@ -11,7 +11,7 @@ model: haiku
 ## 핵심 역할
 
 1. **DB 정보 얻기**: PostgreSQL 기반 connection full url이나 hostname, port, username, password, db_name 이 있는지 물어보거나 나중에 백엔드에 `application.yml`파일에 수동으로 작성할 것인지 물어봅니다.
-2. **포트 정보 얻기**: 관리자 FE, 관리자 BE, 사용자 FE, 사용자 BE 각 4개 프로젝트에서 구동할 포트 번호를 입력 받습니다.
+2. **포트 정보 얻기**: 프론트엔드(FE), 백엔드(BE) 각 2개 프로젝트에서 구동할 포트 번호를 입력 받습니다.
 3. **node 버전 정보 얻기**: 터미널에서 node 버전 직접 확인하고 없으면 먼저 설치가 필요하다고 안내하기
 4. **JDK 버전 정보 얻기**: 터미널에서 JAVA_HOME를 확인하고 현재 JDK 버전이 뭐라고 알려주면서 이걸 사용할거냐고 물어보기, 설치가 안되어있으면 사전에 설치하라고 안내하기
 5. **첨부파일 저장 경로 얻기**: 첨부파일을 저장할 절대 경로를 물어봅니다. 이 값은 백엔드 `application.yml`의 `app.file.root-directory`에 설정됩니다. (예: `D:/uploads`, `/home/user/uploads`) 나중에 수동으로 설정하겠다면 비워둘 수 있습니다.
@@ -44,10 +44,8 @@ model: haiku
   Options:	[sslmode=require&channel_binding=require]
 
   ## 프로젝트별 Port 정보
-  관리자 FE: [3001]
-  관리자 BE: [9001]
-  사용자 FE: [3000]
-  사용자 BE: [9000]
+  프론트엔드(FE): [3000]
+  백엔드(BE): [8080]
 
   ## 첨부파일 저장 경로
   app.file.root-directory: [절대 경로 또는 미설정 시 비워둠]
@@ -65,6 +63,22 @@ model: haiku
   
   ## 프론트엔드 전달 사항
   ## 백엔드 전달 사항
+
+## 인터뷰 완료 후 확인 사항
+
+`reports/01-pre-interview.md` 작성이 끝나면 아래 항목이 빠짐없이 기록되었는지 스스로 점검한다. 누락된 항목이 있으면 사용자에게 재질문한다.
+
+| # | 확인 항목 | 필수 | 이후 반영 대상 |
+|---|-----------|------|---------------|
+| 1 | DB 접속 정보 (URL 또는 host/port/user/pw/db) | Y | BE `application.yml` |
+| 2 | BE 포트 | Y | BE `application.yml` (`server.port`) |
+| 3 | FE 포트 | Y | FE 실행 명령 (`--port`) |
+| 4 | 첨부파일 저장 경로 | N | BE `application.yml` (`app.file.root-directory`) |
+| 5 | Node.js 버전 (18+) | Y | 미설치 시 중단 안내 |
+| 6 | JDK 버전 및 JAVA_HOME | Y | 미설치 시 중단 안내 |
+
+- "수동 설정" 선택 항목은 산출물에 **"수동 설정 예정"**으로 명시한다
+- 모든 항목이 확인되면 오케스트레이터에게 완료를 알린다
 
 ## 에러 핸들링
 

@@ -28,12 +28,30 @@ trigger: /projs-setup
 | 순서 | 작업 | 담당 | 의존 | 산출물 |
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `projs/fe-next` 프론트앤드 코드 |
-| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `projs/be-springboot` 백엔드 코드 |
+| 1.5 | 설정 반영 확인 | 오케스트레이터 | 작업 1 | 설정 파일 반영 완료 |
+| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1.5 | `projs/fe-next` 프론트앤드 코드 |
+| 2c | 관리자 백엔드 개발 | backend | 작업 1.5 | `projs/be-springboot` 백엔드 코드 |
 | 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2c | DB 테이블 생성 완료 |
 | 4 | QA 검증 & 테스트 | qa | 작업 3 | `reports/qa.md`, 테스트 코드 |
 
-작업 2a(관리자 프론트엔드 개발), 2c( 관리자 백엔드 개발)는 **병렬 실행**한다. 모두 작업 1(사전 인터뷰)에만 의존한다.
+### 작업 1.5: 설정 반영 확인 (개발 착수 전 필수 게이트)
+
+pre-interview 완료 후, `reports/01-pre-interview.md`를 읽고 아래 항목이 개발 에이전트에게 전달할 정보에 빠짐없이 반영되었는지 확인한다.
+
+| 확인 항목 | 반영 대상 | pre-interview 소스 |
+|-----------|----------|-------------------|
+| DB 접속 정보 | BE `application.yml` (`spring.datasource.*`) | DB 정보 섹션 |
+| BE 포트 | BE `application.yml` (`server.port`) | 포트 정보 섹션 |
+| FE 포트 | FE 실행 명령 (`--port`) | 포트 정보 섹션 |
+| BE API URL | FE `.env.local` (`NEXT_PUBLIC_API_URL`) | BE 포트 기반 |
+| CORS 허용 origin | BE `SecurityConfig` 또는 `WebMvcConfig` | FE 포트 기반 |
+| 첨부파일 경로 | BE `application.yml` (`app.file.root-directory`) | 첨부파일 저장 경로 섹션 |
+| Node/JDK 설치 여부 | 미설치 시 사용자에게 안내 후 중단 | 시스템 환경 정보 섹션 |
+
+- 사용자가 "수동 설정"을 선택한 항목은 건드리지 않고, 해당 사실을 개발 에이전트에게 전달한다
+- 모든 항목 확인 후 작업 2a, 2c로 진행한다
+
+작업 2a(관리자 프론트엔드 개발), 2c(관리자 백엔드 개발)는 **병렬 실행**한다. 모두 작업 1.5(설정 반영 확인)에 의존한다.
 
 ### 작업 3: 사용자 확인 (QA 전 필수 게이트)
 
