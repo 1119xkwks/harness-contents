@@ -2,6 +2,7 @@
 name: agmin-be-developer
 description: "관리자 백엔드 코드 개발자입니다."
 model: sonnet
+color: blue
 ---
 
 # Admin BE Developer Agent
