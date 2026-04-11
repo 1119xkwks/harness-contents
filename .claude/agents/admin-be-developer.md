@@ -19,6 +19,16 @@ color: blue
 - MyBatis 매퍼 및 SQL 작성
 - Service 레이어 구현 (interface + impl 분리)
 
+## @MapperScan 규칙
+
+`BeAdminApplication`의 `@MapperScan`은 반드시 **mapper 패키지만** 스캔해야 한다:
+
+```java
+@MapperScan("com.harness.beadmin.*.mapper")
+```
+
+> **금지**: `@MapperScan("com.harness.beadmin")` — 범위가 너무 넓으면 Service 인터페이스까지 MyBatis 매퍼로 등록되어, ServiceImpl 대신 MyBatis 프록시가 주입된다. 이 경우 `BindingException: Invalid bound statement` 에러가 발생한다.
+
 ## 프로젝트 구조
 
 ```
@@ -91,9 +101,11 @@ public interface HomeMapper {
 // SecurityConfig — permitAll 설정
 http.authorizeHttpRequests(auth -> auth
     .requestMatchers("/hello").permitAll()
+    .requestMatchers("/error").permitAll()
     .requestMatchers("/api/auth/**").permitAll()
     .anyRequest().authenticated()
 );
+// ⚠ "/error"를 permitAll에 반드시 포함할 것 — 누락 시 내부 에러(500)가 403으로 변환됨
 ```
 
 ## MyBatis 규칙
@@ -173,6 +185,49 @@ public Page<UsersDTO> getPage(Pageable pageable) {
     WHERE u.is_deleted = 'N'
 </select>
 ```
+
+## 비밀번호 암호화 규칙
+
+### 사용 라이브러리
+- **Spring Security Crypto** (`org.springframework.security:spring-security-crypto`)
+- 클래스: `org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder`
+
+### 암호화 방식
+- **BCrypt** — 단방향 해시 (대칭키 없음, 복호화 불가)
+- BCrypt는 내부적으로 랜덤 salt를 자동 생성하여 해시에 포함시킨다
+- 동일한 평문이라도 매번 다른 해시가 생성된다
+
+### SecurityConfig Bean 등록
+
+```java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}
+```
+
+### 비밀번호 저장 (회원가입/비밀번호 변경)
+
+```java
+String encodedPw = passwordEncoder.encode(plainPassword);
+usersDTO.setPw(encodedPw);
+```
+
+### 비밀번호 비교 (로그인)
+
+```java
+// matches(평문, 해시) — 순서 주의
+if (!passwordEncoder.matches(loginRequest.getPw(), user.getPw())) {
+    throw new RuntimeException("아이디 또는 비밀번호가 올바르지 않습니다.");
+}
+```
+
+### 주의사항
+- **평문 저장 금지** — DB에 비밀번호를 평문으로 INSERT하지 않는다
+- **bcryptjs(Node) 해시 호환 불가** — `$2b$` 해시를 `$2a$`로 단순 치환하면 Spring과 호환되지 않을 수 있음. 반드시 Spring `BCryptPasswordEncoder`로 생성한 해시를 사용한다
+- **초기 데이터**: `admin1234` → `$2a$10$jB4h7H2bGIxB5ejjPe0ZGe5NiYfrzQw1Axve0Rnwg0xVQHzwE.bKy`
+
+---
 
 ## Spring Security & JWT 인증 규칙
 
@@ -348,12 +403,13 @@ POST   /api/{feature-name}/delete/{id}  -- 삭제 (Soft Delete)
 ```yaml
 app:
   file:
-    root-directory: "C:/uploads"  # 절대 경로 (예: C:/uploads, /home/user/uploads)
+    root-directory:  # 절대 경로 (예: D:/uploads, /home/user/uploads) — 모르면 비워둔다
 ```
 
 ### 필수 사항
 
-- **키값(`app.file.root-directory`)은 반드시 존재해야 함** — 설정하지 않으면 애플리케이션 시작 시 500 에러 발생
+- **키값(`app.file.root-directory`)은 반드시 존재해야 함** — 값을 모르면 빈 문자열로 두되, 실제 운영 전에 반드시 설정해야 한다
+- **사전 인터뷰(`pre-interview`)에서 확인된 경로를 사용** — 인터뷰 산출물 `reports/01-pre-interview.md`의 "첨부파일 저장 경로" 항목 참조
 - **디렉터리가 존재해야 함** — 입력된 경로가 존재하지 않으면 500 에러 발생
 - **절대 경로 사용** — 상대 경로는 사용하지 않음
 

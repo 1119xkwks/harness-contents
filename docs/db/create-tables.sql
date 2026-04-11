@@ -46,8 +46,7 @@ COMMENT ON COLUMN users.created_at IS '작성 일시';
 COMMENT ON COLUMN users.updated_by IS '수정자 ID';
 COMMENT ON COLUMN users.updated_at IS '수정 일시';
 
--- 인덱스 생성
-CREATE INDEX idx_users ON users(id);
+-- 인덱스: UNIQUE(id)가 자동 생성하므로 별도 인덱스 불필요
 
 -- ============================================================
 -- 2. COMMON_CODES TABLE (공통코드 테이블)
@@ -92,8 +91,7 @@ COMMENT ON COLUMN common_codes.created_at IS '작성 일시';
 COMMENT ON COLUMN common_codes.updated_by IS '수정자 ID';
 COMMENT ON COLUMN common_codes.updated_at IS '수정 일시';
 
--- 인덱스 생성
-CREATE INDEX idx_common_codes ON common_codes(code_name, code_value);
+-- 인덱스: UNIQUE(code_name, code_value)가 자동 생성하므로 별도 인덱스 불필요
 
 -- ============================================================
 -- 3. ADMIN_MENUS TABLE (관리자 메뉴 테이블)
@@ -185,8 +183,7 @@ COMMENT ON COLUMN admin_roles.created_at IS '작성 일시';
 COMMENT ON COLUMN admin_roles.updated_by IS '수정자 ID';
 COMMENT ON COLUMN admin_roles.updated_at IS '수정 일시';
 
--- 인덱스 생성
-CREATE INDEX idx_admin_roles ON admin_roles(role_name);
+-- 인덱스: UNIQUE(role_name)가 자동 생성하므로 별도 인덱스 불필요
 
 -- ============================================================
 -- 5. ADMIN_ROLE_USERS TABLE (역할-사용자 매핑 테이블)
@@ -227,8 +224,7 @@ COMMENT ON COLUMN admin_role_users.created_at IS '작성 일시';
 COMMENT ON COLUMN admin_role_users.updated_by IS '수정자 ID';
 COMMENT ON COLUMN admin_role_users.updated_at IS '수정 일시';
 
--- 인덱스 생성
-CREATE INDEX idx_admin_role_users ON admin_role_users(admin_roles_seq, users_seq);
+-- 인덱스: UNIQUE(admin_roles_seq, users_seq)가 자동 생성하므로 별도 인덱스 불필요
 
 -- ============================================================
 -- 6. ADMIN_ROLE_MENUS TABLE (역할-메뉴 매핑 테이블)
@@ -269,8 +265,7 @@ COMMENT ON COLUMN admin_role_menus.created_at IS '작성 일시';
 COMMENT ON COLUMN admin_role_menus.updated_by IS '수정자 ID';
 COMMENT ON COLUMN admin_role_menus.updated_at IS '수정 일시';
 
--- 인덱스 생성
-CREATE INDEX idx_admin_role_menus ON admin_role_menus(admin_roles_seq, admin_menus_seq);
+-- 인덱스: UNIQUE(admin_roles_seq, admin_menus_seq)가 자동 생성하므로 별도 인덱스 불필요
 
 -- ============================================================
 -- 7. ATTACHMENTS TABLE (첨부파일 마스터 테이블)
@@ -372,9 +367,10 @@ CREATE INDEX idx_attachment_files ON attachment_files(attachments_seq, order_seq
 -- ============================================================
 
 /*
--- 초기 관리자 계정
+-- 초기 관리자 계정 
+-- admin / admin1234
 INSERT INTO users (id, pw, name, is_admin, is_deleted, created_by, created_at)
-VALUES ('admin', 'admin1234', '관리자', 'Y', 'N', 1, NOW());
+VALUES ('admin', '$2a$10$jB4h7H2bGIxB5ejjPe0ZGe5NiYfrzQw1Axve0Rnwg0xVQHzwE.bKy', '관리자', 'Y', 'N', 1, NOW());
 
 -- 역할 정의
 INSERT INTO admin_roles (role_name, role_description, is_deleted, created_by, created_at)

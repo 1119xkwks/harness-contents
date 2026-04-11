@@ -243,6 +243,31 @@ model: haiku
 - [ ] `./gradlew clean build` 성공 (컴파일 에러 0개)
 - [ ] 빌드 산출물 생성됨: `build/libs/*.jar`
 
+### 2️⃣ BE 런타임 엔드포인트 검증
+
+> BE 서버를 실행하여 핵심 엔드포인트가 정상 동작하는지 확인한다.
+> 검증 완료 후 **반드시 실행했던 Java 프로세스를 종료**한다.
+
+#### /hello (Public 헬스체크)
+- [ ] `curl http://localhost:9001/hello` → HTTP 200 응답
+- [ ] 응답 body에 현재 시간 포함 (`ApiResponse.success(...)` 형식)
+- [ ] Spring Security permitAll 정상 통과 (인증 없이 접근)
+
+#### /api/auth/login (로그인)
+- [ ] `curl -X POST http://localhost:9001/api/auth/login -H "Content-Type: application/json" -d '{"id":"admin","pw":"admin1234"}'` → HTTP 200 응답
+- [ ] 응답 body에 `accessToken`, `refreshToken`, `usersSeq`, `name` 포함
+- [ ] 잘못된 비밀번호 시 에러 응답 (200이 아닌 응답 또는 에러 메시지)
+- [ ] DB의 `admin` 사용자 `pw` 컬럼에 Spring BCryptPasswordEncoder가 생성한 해시값 저장 확인
+  - 평문: `admin1234`
+  - BCrypt 해시: `$2a$10$jB4h7H2bGIxB5ejjPe0ZGe5NiYfrzQw1Axve0Rnwg0xVQHzwE.bKy`
+  - **주의**: bcryptjs(Node) 등 외부 라이브러리가 생성한 `$2b$` 해시를 `$2a$`로 단순 치환하면 Spring과 호환되지 않을 수 있음. 반드시 Spring BCryptPasswordEncoder로 생성한 해시를 사용할 것
+
+#### 실패 시 점검 사항
+- [ ] `@MapperScan` 범위가 `*.mapper`로 한정되어 있는지 확인 (너무 넓으면 Service가 MyBatis 매퍼로 등록됨)
+- [ ] SecurityConfig에 `/error` permitAll 포함 여부 확인 (누락 시 500이 403으로 변환)
+- [ ] DB에 `admin` 사용자 레코드가 존재하고 `is_deleted = 'N'`인지 확인
+- [ ] `admin` 사용자의 `pw` 컬럼이 평문이 아닌 BCrypt 해시값인지 확인 (`$2a$10$`으로 시작)
+
 ---
 
 ## 📋 PART 3: Admin BE 검증
