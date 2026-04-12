@@ -314,7 +314,7 @@
 ### 구성
 
 - **검색 영역**: 제목(title) 입력 + 카테고리(categoryCode) 선택 + 검색 버튼
-  - 카테고리 선택: `GET /api/common-codes/detail/page?codeGroup=ai_category` 로 목록 조회하여 드롭다운 구성
+  - 카테고리 선택: FE 캐싱된 `ai_category` 코드 리스트로 드롭다운 구성 — **[공통코드 캐싱 규칙](common-code-cache.md)**
 - **테이블**: 페이징 목록
 - **행 클릭**: `/admin/content/ai-prompts/detail/{aiPromptContentsSeq}` 상세 페이지로 이동
 - **등록 버튼**: `/admin/content/ai-prompts/detail/new` 로 이동
@@ -327,7 +327,7 @@
 | 2 | 아바타 | `avatarEmoji`, `avatarColor` | - | 32×32 원형. `avatarColor`를 배경(`background`)으로, `avatarEmoji`를 중앙 표시 |
 | 3 | 제목 | `title` | - | |
 | 4 | 소개 | `intro` | - | 말줄임 처리 (1줄) |
-| 5 | 카테고리 | `categoryCode` | - | code_name으로 표시 (예: 철학, 법률) |
+| 5 | 카테고리 | `categoryCode` | - | FE 캐싱된 `ai_category` 코드로 `codeValue` → `codeName` 변환 표시 (예: 철학, 법률) — **[공통코드 캐싱 규칙](common-code-cache.md)** |
 | 6 | 등록일 | `createdAt` | 가능 | |
 
 ---
@@ -358,13 +358,13 @@
 | # | 라벨 | 필드 | 생성 | 수정 | 조회 |
 |---|------|------|------|------|------|
 | 1 | 제목 | `title` | 입력 | 입력 | 읽기전용 |
-| 2 | 카테고리 | `categoryCode` | 선택(드롭다운) | 선택(드롭다운) | 읽기전용 (code_name 표시) |
+| 2 | 카테고리 | `categoryCode` | 선택(드롭다운) | 선택(드롭다운) | 읽기전용 (캐싱된 코드명 표시) |
 | 3 | 아바타 이모지 | `avatarEmoji` | 입력 | 입력 | 읽기전용 |
 | 4 | 아바타 색상 | `avatarColor` | 입력 | 입력 | 읽기전용 |
 | 5 | 소개 | `intro` | 입력 | 입력 | 읽기전용 |
 | 6 | 프롬프트 내용 | `promptContent` | 입력(textarea) | 입력(textarea) | 읽기전용 |
 
-- **카테고리 드롭다운**: `GET /api/common-codes/detail/page?codeGroup=ai_category` 로 조회, `code_value`를 값으로, `code_name`을 표시명으로 사용
+- **카테고리 드롭다운**: FE 캐싱된 `ai_category` 코드 리스트에서 `codeValue`를 값으로, `codeName`을 표시명으로 사용 — **[공통코드 캐싱 규칙](common-code-cache.md)**
 - **아바타 이모지**: 이모지 1개 입력 (예: 👑, ⚖️, 👨‍🍳, 🌏)
 - **아바타 색상**: CSS gradient 값 입력 (예: `linear-gradient(135deg, #ffd54f, #ffb300)`)
 - **프롬프트 내용**: textarea 높이 최소 10줄, 모노스페이스 폰트 적용

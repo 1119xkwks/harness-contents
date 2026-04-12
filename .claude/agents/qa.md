@@ -829,7 +829,7 @@ allowedTools:
 
 #### 폼 필드
 - [ ] 제목(`title`): 생성=입력, 수정=입력, 조회=읽기전용
-- [ ] 카테고리(`categoryCode`): 생성/수정=드롭다운, 조회=읽기전용(code_name 표시)
+- [ ] 카테고리(`categoryCode`): 생성/수정=드롭다운(캐싱된 코드), 조회=읽기전용(`getCodeName()` 변환)
 - [ ] 소개(`intro`): 생성=입력, 수정=입력, 조회=읽기전용
 - [ ] 프롬프트 내용(`promptContent`): 생성/수정=textarea, 조회=읽기전용
   - [ ] textarea 최소 10줄 높이
@@ -854,7 +854,7 @@ allowedTools:
 |-------------|---------|------|
 | AI 이름 | `title` | |
 | 설명 | `intro` | |
-| 카테고리 태그 | `categoryCode` → `code_name`으로 변환 표시 | |
+| 카테고리 태그 | `categoryCode` → FE 캐싱 `getCodeName()` 변환 표시 | |
 | 아바타 이모지 | `avatarEmoji` | 원형 중앙 표시 |
 | 아바타 배경 | `avatarColor` | CSS gradient 배경 |
 | 카드 클릭 URL | `/chat/{aiPromptContentsSeq}` | PK 기반 slug |
@@ -905,6 +905,72 @@ allowedTools:
 #### 페르소나 조회
 - [ ] LLM API가 BE API(`GET /api/ai-prompt-contents/{id}`)를 호출하여 system prompt 조회
 - [ ] DB에 직접 연결하지 않음
+
+---
+
+## 📋 PART 6: 공통코드 FE 캐싱 검증
+
+> 공통코드 관리 페이지(`/admin/system/codes`)를 **제외한** 모든 페이지에서 공통코드 캐싱 방식을 사용하는지 검증한다.
+> 규칙 참조: `docs/ui/common-code-cache.md`
+
+### 1️⃣ `useCommonCodes` 훅 존재 검증
+
+- [ ] 파일: `app/hooks/useCommonCodes.ts` 존재
+- [ ] `GET /api/common-codes/cache/{codeGroup}` 호출
+- [ ] 반환 타입: `{ codes, getCodeName, loading }`
+- [ ] `codes`: `Record<string, CodeItem[]>` (codeGroup → 코드 리스트 맵)
+- [ ] `getCodeName(codeGroup, codeValue)`: 코드명 반환 함수
+- [ ] 여러 codeGroup을 한 번에 조회 가능 (`useCommonCodes('ai_category', 'status')`)
+
+### 2️⃣ BE API 응답에 코드명 미포함 검증
+
+- [ ] AI 프롬프트 API 응답에 `categoryName` 필드 **없음**
+- [ ] `categoryCode` (코드값)만 반환
+- [ ] BE SQL에서 `common_codes` JOIN **없음** (AI 프롬프트 관련 쿼리)
+  ```
+  ✗ LEFT JOIN common_codes cc ON cc.code_value = apc.category_code
+  ✗ "categoryName": "철학"
+  ✓ "categoryCode": "philosophy"  (코드값만 반환)
+  ```
+
+### 3️⃣ 리스트 페이지 캐싱 사용 검증
+
+> AI 프롬프트 목록 등 공통코드를 사용하는 리스트 페이지 검증
+
+#### 검색 Select
+- [ ] 검색 드롭다운이 `codes[codeGroup]`으로 구성됨 (API 개별 호출 아님)
+- [ ] `codeValue`를 option value로, `codeName`을 option label로 사용
+- [ ] 전체(All) 옵션 포함
+
+#### 테이블 컬럼
+- [ ] 코드값 컬럼에 `getCodeName()` 사용하여 코드명 표시
+- [ ] BE 응답의 코드명 필드(`categoryName` 등)에 의존하지 않음
+  ```typescript
+  ✓ getCodeName('ai_category', row.categoryCode)  // → "철학"
+  ✗ row.categoryName  // BE에서 반환하지 않음
+  ```
+
+### 4️⃣ 상세/등록/수정 페이지 캐싱 사용 검증
+
+- [ ] 폼 Select가 `codes[codeGroup]`으로 구성됨
+- [ ] 생성/수정 모드: Select 드롭다운으로 선택, 선택된 `codeValue` 저장
+- [ ] 조회 모드: `getCodeName()`으로 읽기전용 텍스트 표시
+- [ ] `GET /api/common-codes/detail/page` 등 다른 API 호출로 드롭다운 구성하지 않음
+
+### 5️⃣ BE 캐싱 API 엔드포인트 검증
+
+- [ ] `GET /api/common-codes/cache/{codeGroup}` 엔드포인트 존재
+- [ ] SecurityConfig에서 `permitAll` 처리됨 (인증 불필요)
+- [ ] 그룹코드 자신 제외 (`code_group = code_value`인 행 제외)
+- [ ] `is_deleted = 'N'` 조건 포함
+- [ ] `order_seq` 오름차순 정렬
+- [ ] 페이징 없이 전체 반환
+- [ ] 응답 형식: `ApiResponse<List<CodeItem>>` (`codeValue`, `codeName` 필드만 포함)
+
+### 6️⃣ 예외 확인
+
+- [ ] 공통코드 관리 페이지(`/admin/system/codes`)는 캐싱 방식 **미적용** (기존 CRUD API 사용)
+- [ ] 공통코드 관리 페이지에서 `useCommonCodes` 훅을 사용하지 않음
 
 ---
 

@@ -238,6 +238,46 @@ ThemeProvider
 
 ---
 
+## 공통코드 FE 캐싱 ★핵심★
+
+> **공통코드 관리 페이지(`/admin/system/codes`)를 제외한 모든 페이지**에서 공통코드는 FE 캐싱 방식을 사용한다.
+> 상세 규칙: **`docs/ui/common-code-cache.md`** 참조
+
+### 금지 사항
+
+- BE API 응답의 `categoryName` 등 코드명 필드에 의존 금지 (BE는 `categoryCode` 등 코드값만 반환)
+- 공통코드 표시를 위해 BE에서 `common_codes` JOIN 하지 않음
+
+### `useCommonCodes` 커스텀 훅 (`app/hooks/useCommonCodes.ts`)
+
+```typescript
+interface CodeItem {
+  codeValue: string;
+  codeName: string;
+}
+
+function useCommonCodes(...codeGroups: string[]): {
+  codes: Record<string, CodeItem[]>;
+  getCodeName: (codeGroup: string, codeValue: string) => string;
+  loading: boolean;
+}
+```
+
+- `GET /api/common-codes/cache/{codeGroup}` (Public) 호출하여 캐싱
+- `codes['ai_category']` → Select 옵션 구성
+- `getCodeName('ai_category', 'philosophy')` → `'철학'` 반환
+
+### 사용 패턴
+
+| 위치 | 사용 방법 |
+|------|----------|
+| 리스트 검색 Select | `codes[codeGroup]`으로 드롭다운 옵션 구성 |
+| 리스트 테이블 컬럼 | `getCodeName(codeGroup, row.categoryCode)`로 코드명 표시 |
+| 상세/등록/수정 폼 Select | `codes[codeGroup]`으로 드롭다운 옵션 구성 |
+| 조회 모드 텍스트 | `getCodeName(codeGroup, data.categoryCode)`로 읽기전용 표시 |
+
+---
+
 ## 전역 미들웨어 (middleware.ts) ★핵심★
 
 > 파일 위치: `projs/fe-next/src/middleware.ts` (Next.js App Router — `src/` 디렉터리 사용 시)
