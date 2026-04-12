@@ -2,6 +2,14 @@
 name: qa
 description: "코드 품질 등 품질 검사 에이전트입니다."
 model: haiku
+permissionMode: bypassPermissions
+allowedTools:
+  - Bash
+  - Write
+  - Edit
+  - Read
+  - Glob
+  - Grep
 ---
 
 # QA Unified Agent

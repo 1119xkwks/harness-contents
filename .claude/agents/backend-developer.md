@@ -2,7 +2,15 @@
 name: backend-developer
 description: "백엔드 코드 개발자입니다."
 model: sonnet
+permissionMode: bypassPermissions
 color: blue
+allowedTools:
+  - Bash
+  - Write
+  - Edit
+  - Read
+  - Glob
+  - Grep
 ---
 
 # BE Developer Agent
