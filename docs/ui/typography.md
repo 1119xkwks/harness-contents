@@ -24,7 +24,7 @@ const notoSansKR = Noto_Sans_KR({
 
 ### 허용된 Weight 값
 
-| Weight | 용도 | Tailwind 클래스 | 사용 예 |
+| Weight | 용도 | MUI sx prop | 사용 예 |
 |--------|------|-----------------|--------|
 | **400** | 본문, 일반 텍스트 | `font-normal` | 일반 설명, 본문 내용 |
 | **500** | 강조 텍스트, 서브헤더 | `font-medium` | 카드 제목, 라벨 |
@@ -40,54 +40,57 @@ const notoSansKR = Noto_Sans_KR({
 
 ### 올바른 사용
 
-```html
-<!-- ✅ Tailwind 클래스 사용 -->
-<div className="font-normal">본문</div>     <!-- 400 -->
-<div className="font-medium">강조</div>     <!-- 500 -->
-<div className="font-bold">헤더</div>       <!-- 700 -->
+```tsx
+{/* ✅ MUI Typography / sx prop 사용 */}
+<Typography sx={{ fontWeight: 400 }}>본문</Typography>
+<Typography sx={{ fontWeight: 500 }}>강조</Typography>
+<Typography sx={{ fontWeight: 700 }}>헤더</Typography>
 ```
 
 ---
 
-## Tailwind CSS 설정
+## MUI Theme 설정
 
-`globals.css`에서 정의된 custom font weights:
+`providers.tsx`에서 MUI ThemeProvider로 폰트 설정:
 
-```css
-@theme inline {
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-bold: 700;
-}
+```tsx
+const theme = createTheme({
+  typography: {
+    fontFamily: '"Noto Sans KR", sans-serif',
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+    fontWeightBold: 700,
+  },
+});
 ```
 
 ---
 
 ## 텍스트 크기 규칙
 
-| 용도 | Tailwind 클래스 | 크기 |
-|------|-----------------|------|
-| 페이지 제목 | `text-xl` 또는 `text-2xl` | 20px / 24px |
-| 섹션 제목 | `text-lg` | 18px |
-| 카드 제목 | `text-base font-medium` | 16px |
-| 본문 | `text-sm` | 14px |
-| 보조 텍스트 | `text-xs` | 12px |
-| Breadcrumbs | `text-xs` | 12px |
+| 용도 | MUI 사용법 | 크기 |
+|------|-----------|------|
+| 페이지 제목 | `<Typography variant="h5">` 또는 `sx={{ fontSize: 20 }}` | 20px / 24px |
+| 섹션 제목 | `<Typography variant="h6">` 또는 `sx={{ fontSize: 18 }}` | 18px |
+| 카드 제목 | `<Typography sx={{ fontSize: 16, fontWeight: 500 }}>` | 16px |
+| 본문 | `<Typography variant="body2">` 또는 `sx={{ fontSize: 14 }}` | 14px |
+| 보조 텍스트 | `<Typography variant="caption">` 또는 `sx={{ fontSize: 12 }}` | 12px |
+| Breadcrumbs | `<Typography variant="caption">` | 12px |
 
 ### 사용 예시
 
-```html
-<!-- 페이지 제목 -->
-<h1 className="text-xl font-bold text-gray-900">회원 목록</h1>
+```tsx
+{/* 페이지 제목 */}
+<Typography variant="h5" sx={{ fontWeight: 700, color: '#1a1a1a' }}>회원 목록</Typography>
 
-<!-- 카드 제목 -->
-<h3 className="text-base font-medium text-gray-800">총 회원수</h3>
+{/* 카드 제목 */}
+<Typography sx={{ fontSize: 16, fontWeight: 500, color: '#333' }}>총 회원수</Typography>
 
-<!-- 본문 -->
-<p className="text-sm font-normal text-gray-600">설명 텍스트입니다.</p>
+{/* 본문 */}
+<Typography variant="body2" sx={{ color: '#666' }}>설명 텍스트입니다.</Typography>
 
-<!-- 보조 텍스트 -->
-<span className="text-xs text-gray-400">2026-04-12</span>
+{/* 보조 텍스트 */}
+<Typography variant="caption" sx={{ color: '#999' }}>2026-04-12</Typography>
 ```
 
 ---
@@ -97,9 +100,9 @@ const notoSansKR = Noto_Sans_KR({
 1. **일관성 유지**: 모든 텍스트는 400, 500, 700 중 하나의 weight를 사용
 2. **가독성**: 너무 많은 weight를 섞어 사용하지 않기
 3. **계층구조**: weight로 시각적 계층을 명확하게 표현
-   - 제목: 700 (`font-bold`)
-   - 서브제목: 500 (`font-medium`)
-   - 본문: 400 (`font-normal`)
+   - 제목: 700 (`sx={{ fontWeight: 700 }}`)
+   - 서브제목: 500 (`sx={{ fontWeight: 500 }}`)
+   - 본문: 400 (`sx={{ fontWeight: 400 }}`)
 
 ---
 

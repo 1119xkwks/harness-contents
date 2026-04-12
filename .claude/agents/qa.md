@@ -38,7 +38,7 @@ allowedTools:
   ```
 
 #### 필수 파일
-- [ ] `package.json` - Next.js 14+, React 18+, tailwindcss 확인
+- [ ] `package.json` - Next.js 14+, React 18+, MUI (@mui/material, @emotion/react, @emotion/styled) 확인
 - [ ] `tsconfig.json` - TypeScript 설정 확인
 - [ ] `.env.local` - 환경변수 설정 (필요시)
 
@@ -98,7 +98,7 @@ allowedTools:
 - [ ] MainLayout으로 래핑 필수
 - [ ] breadcrumbs 속성 정의
 - [ ] docs/ui/ 가이드라인 준수
-- [ ] Tailwind CSS 유틸리티 클래스 사용
+- [ ] MUI 컴포넌트 및 sx prop 사용 (Tailwind CSS 사용 금지)
 
 ### 5️⃣ 페이징 리스트 UI 검증 (docs/ui/paging-list-ui-admin.md)
 
@@ -155,17 +155,21 @@ allowedTools:
 - [ ] 간격(spacing), padding, margin 규칙
 - [ ] 반응형 브레이크포인트 정의
 
-#### CSS 검증 (Tailwind CSS)
-- [ ] globals.css에 Tailwind directives 포함 (`@tailwind base; @tailwind components; @tailwind utilities;`)
-- [ ] Tailwind 유틸리티 클래스로 스타일링 (inline style, CSS Modules 사용 최소화)
-- [ ] 모바일 반응형 (Tailwind breakpoints)
+#### CSS 검증 (MUI)
+- [ ] MUI ThemeProvider가 providers.tsx에서 전체 앱을 감싸고 있음
+- [ ] MUI 컴포넌트(Box, Typography, Card, AppBar, Drawer 등)로 스타일링
+- [ ] sx prop 사용 (Tailwind 유틸리티 클래스 사용 금지)
+- [ ] Tailwind CSS 패키지 미설치 확인 (`package.json`에 `tailwindcss`, `@tailwindcss/postcss` 없음)
+- [ ] `globals.css`에 `@import "tailwindcss"`, `@tailwind` 지시문 없음
+- [ ] MUI theme.breakpoints로 반응형 구현
   ```
-  ✓ sm: 640px
-  ✓ md: 768px
-  ✓ lg: 1024px
-  ✓ xl: 1280px
+  ✓ xs: 0px
+  ✓ sm: 600px
+  ✓ md: 900px
+  ✓ lg: 1200px
+  ✓ xl: 1536px
   ```
-- [ ] 목업 HTML의 CSS를 그대로 복사하지 않음 (화면 모양만 참고, Tailwind으로 재구현)
+- [ ] 목업 HTML의 CSS를 그대로 복사하지 않음 (화면 모양만 참고, MUI 컴포넌트로 재구현)
 
 ### 7️⃣ 브라우저 내장 함수 사용 금지 검증
 
@@ -229,10 +233,10 @@ allowedTools:
 - [ ] AppBar 통일
 - [ ] Breadcrumbs 경로 표시
 
-#### Tailwind CSS 스타일링
-- [ ] 모든 UI 요소에 Tailwind 유틸리티 클래스 사용
-- [ ] MUI, Emotion, CSS Modules 사용 **없음**
-- [ ] 커스텀 CSS 최소화 (Tailwind으로 처리 가능한 것은 Tailwind 사용)
+#### MUI 스타일링
+- [ ] 모든 UI 요소에 MUI 컴포넌트 및 sx prop 사용
+- [ ] Tailwind CSS 사용 **없음** (패키지 미설치, className에 Tailwind 클래스 없음)
+- [ ] 커스텀 CSS 최소화 (MUI 컴포넌트로 처리 가능한 것은 MUI 사용)
 
 ### 1️⃣2️⃣ JWT 토큰 보안 검증
 
@@ -257,6 +261,67 @@ allowedTools:
 - [ ] `/api/file/download` 가 SecurityConfig에서 `permitAll()` 처리됨
 - [ ] `/api/file/upload` 는 `authenticated()` (permitAll **아님**)
 - [ ] `/api/file/delete` 는 `authenticated()` (permitAll **아님**)
+
+### 1️⃣3️⃣ 사용자 홈 화면 (`/`) Mockup UI 검증
+
+> 목업 파일: `docs/ui/mockup/mockup-01-select.html`을 기준으로 검증한다.
+
+#### 헤더 영역
+- [ ] 상단 sticky 헤더 존재 (스크롤 시 고정)
+- [ ] 배경: 흰색, 하단 border (`#e0e0e0`)
+- [ ] "AI 대화방" 제목 (fontSize 20px, fontWeight 700)
+- [ ] "대화할 AI를 선택해주세요" 부제 (fontSize 13px, 회색)
+- [ ] 중앙 정렬
+
+#### 카드 그리드 영역
+- [ ] 섹션 타이틀: 녹색 점(●) + "현재 대화 가능한 AI" 텍스트
+- [ ] 카드 그리드: 데스크톱 3열, 모바일 2열 반응형
+- [ ] 최대 너비 720px, 중앙 정렬
+
+#### 개별 카드
+- [ ] 흰색 배경, borderRadius 16px
+- [ ] 아바타: 80x80 원형, `avatarColor` 배경, `avatarEmoji` 중앙 표시 (fontSize 36px+)
+- [ ] 이름: fontSize 16px, fontWeight 600
+- [ ] 설명: fontSize 12px, 회색(#999)
+- [ ] 카테고리 태그(Chip): 하단에 표시
+- [ ] hover 시: border `#4a90d9`, 그림자 증가, 살짝 위로 이동 (translateY)
+- [ ] 클릭 시: `/chat/[id]`로 이동
+
+#### 상태 처리
+- [ ] 로딩 중: 스켈레톤 카드 표시 (4개)
+- [ ] 데이터 0건: "등록된 AI 캐릭터가 없습니다." 메시지 중앙 표시
+- [ ] 하단 안내: "관리자가 등록한 AI 캐릭터만 표시됩니다" (fontSize 12px, 회색)
+
+#### 데이터 연동
+- [ ] `GET /api/ai-prompt-contents/list` API 호출
+- [ ] 응답의 `avatarEmoji`, `avatarColor`, `title`, `intro`, `categoryCode` 필드 사용
+- [ ] `aiPromptContentsSeq`로 채팅 페이지 라우팅
+
+#### 공통코드 캐싱 적용 (★ 필수)
+- [ ] `useCommonCodes('ai_category')` 훅 사용
+- [ ] 카테고리 태그에 `getCodeName('ai_category', ai.categoryCode)` 사용하여 **코드명**(예: "철학", "법률") 표시
+- [ ] `categoryCode` 원시값(예: "law", "philosophy")이 화면에 그대로 노출되지 않음
+- [ ] 공통코드 관리 페이지(`/admin/system/codes`)를 **제외한** 모든 페이지에서 동일 규칙 적용
+
+### 1️⃣4️⃣ 채팅 화면 (`/chat/[id]`) Mockup UI 검증
+
+> 목업 파일: `docs/ui/mockup/mockup-02-chat.html`을 기준으로 검증한다.
+
+#### 헤더
+- [ ] 뒤로가기 버튼 (`/`으로 이동)
+- [ ] AI 아바타 + AI 이름 표시
+
+#### 채팅 영역
+- [ ] 배경색: `#abc1d1` (카카오톡 스타일)
+- [ ] AI 메시지: 좌측 정렬, 흰색(`#ffffff`) 말풍선
+- [ ] 사용자 메시지: 우측 정렬, 노란색(`#fef01b`) 말풍선
+- [ ] 말풍선 borderRadius: 16px (꼬리 쪽 4px)
+- [ ] 타이핑 인디케이터: 점 3개 애니메이션
+
+#### 입력 영역
+- [ ] 하단 고정 입력바
+- [ ] 텍스트 입력 + 전송 버튼
+- [ ] Enter 키로 전송 가능
 
 ---
 
@@ -287,7 +352,47 @@ allowedTools:
 - [ ] `./gradlew clean build` 성공 (컴파일 에러 0개)
 - [ ] 빌드 산출물 생성됨: `build/libs/*.jar`
 
-### 2️⃣ BE 런타임 엔드포인트 검증
+### 2️⃣ Python 의존성 설치 검증 (LLM API)
+
+#### requirements.txt 버전 호환성
+- [ ] `requirements.txt` 파일 존재
+- [ ] 버전 고정(`==`)이 현재 Python 버전의 사전 빌드 wheel을 지원하는지 확인
+  ```bash
+  # 현재 Python 버전 확인
+  py --version  # 또는 python --version / python3 --version
+  ```
+- [ ] 최신 Python(3.13+)에서 Rust 소스 빌드가 필요한 패키지(pydantic-core 등)는 `>=` 최소 버전으로 지정
+  ```
+  ✓ pydantic>=2.11          # 최신 wheel이 설치되어 소스 빌드 불필요
+  ✗ pydantic==2.10.3        # Python 3.14용 wheel이 없어 Rust 빌드 실패
+  ```
+- [ ] 핵심 패키지가 모두 포함됨: fastapi, uvicorn, openai, anthropic, google-genai, httpx, python-dotenv, pydantic
+
+#### pip install 실행 검증
+- [ ] `py -m pip install -r requirements.txt` 성공 (에러 0개)
+  ```bash
+  cd projs/llm-api
+  py -m pip install -r requirements.txt
+  ```
+- [ ] Rust 컴파일 에러 없음 (`error: linking with link.exe failed` 등)
+- [ ] `Failed building wheel` 에러 없음
+- [ ] 설치 실패 시: 해당 패키지의 버전 고정을 `>=` 최소 버전으로 변경 후 재시도
+
+#### Python 파일 컴파일 검증
+- [ ] 모든 `.py` 파일 문법 검증 통과
+  ```bash
+  py -m py_compile main.py
+  py -m py_compile app/config.py
+  py -m py_compile app/routers/chat.py
+  py -m py_compile app/services/llm_service.py
+  py -m py_compile app/services/openai_service.py
+  py -m py_compile app/services/anthropic_service.py
+  py -m py_compile app/services/google_service.py
+  py -m py_compile app/clients/backend_client.py
+  py -m py_compile app/models/schemas.py
+  ```
+
+### 3️⃣ BE 런타임 엔드포인트 검증
 
 > BE 서버를 실행하여 핵심 엔드포인트가 정상 동작하는지 확인한다.
 > 검증 완료 후 **반드시 실행했던 Java 프로세스를 종료**한다.
@@ -893,6 +998,10 @@ allowedTools:
 - [ ] `requirements.txt` — 필수 패키지 포함 (fastapi, uvicorn, openai, anthropic, google-genai, httpx, python-dotenv)
 - [ ] `.env.example` — API 키 템플릿 존재
 
+#### 의존성 설치 검증
+- [ ] `py -m pip install -r requirements.txt` 성공 — **PART 2 > 2️⃣ Python 의존성 설치 검증** 참조
+- [ ] 모든 `.py` 파일 `py -m py_compile` 통과
+
 #### API 키 검증
 - [ ] `.env`에 API 키 미설정 시 안내 메시지 출력 후 서버 종료
 - [ ] 최소 1개 이상 API 키 설정 시 정상 기동
@@ -972,6 +1081,109 @@ allowedTools:
 
 - [ ] 공통코드 관리 페이지(`/admin/system/codes`)는 캐싱 방식 **미적용** (기존 CRUD API 사용)
 - [ ] 공통코드 관리 페이지에서 `useCommonCodes` 훅을 사용하지 않음
+
+### 7️⃣ Master-Detail / 연관 조회 시 PK(코드값) 사용 검증
+
+> 좌측 목록에서 행 선택 후 우측 상세/하위 목록을 조회할 때, **표시명(codeName 등)이 아닌 PK 또는 코드값(codeValue, seq 등)**으로 API를 호출해야 한다.
+> 표시명으로 조회하면 DB 칼럼과 불일치하여 데이터가 조회되지 않는다.
+
+- [ ] 공통코드 관리: 좌측 그룹코드 선택 시 세부코드 조회 API에 `codeValue`(= `code_group` 값, 예: `ai_category`)를 전달하는지 확인
+  - ✗ `selectedGroup.codeName` (예: "AI 카테고리") → DB `code_group` 칼럼과 불일치, 데이터 0건
+  - ✓ `selectedGroup.codeValue` (예: "ai_category") → DB `code_group` 칼럼과 일치
+- [ ] 권한별 메뉴 관리: 좌측 권한 선택 시 `adminRolesSeq`(PK)로 매핑 조회하는지 확인
+- [ ] 모든 Master-Detail 유형 페이지에서 연관 조회 파라미터가 PK 또는 코드값인지 확인 (표시명 사용 금지)
+
+---
+
+## 📋 PART 7: API 명세 vs 실제 구현 일치 검증 (★ 최우선)
+
+> **이 검증을 반드시 수행한다.** API 명세(`docs/api/api-admin-spec.md`)에 정의된 모든 엔드포인트가 실제 코드에 구현되어 있는지, SecurityConfig permitAll 설정이 명세와 일치하는지 대조한다.
+> 이전에 명세만 있고 구현이 빠진 엔드포인트(`/api/providers`), permitAll 누락(`/api/ai-prompt-contents/**`) 등의 사고가 반복되었다.
+
+### 1️⃣ 엔드포인트 존재 검증 (명세 → 코드)
+
+> `docs/api/api-admin-spec.md`의 전체 엔드포인트 요약표를 기준으로, 각 엔드포인트가 실제 코드에 존재하는지 1:1 대조한다.
+
+#### BE (Spring Boot) 엔드포인트
+- [ ] 명세의 **모든** BE 엔드포인트에 대해 해당 Controller 파일에 `@GetMapping`, `@PostMapping` 등 매핑이 존재하는지 grep으로 확인
+  ```bash
+  # 예시: 명세에 GET /api/users/page 가 있으면
+  grep -rn "/users/page" projs/be-springboot/src/
+  ```
+- [ ] 매핑이 없는 엔드포인트 → **즉시 구현**
+- [ ] URL 경로가 명세와 정확히 일치하는지 확인 (오타, 슬래시 누락 등)
+- [ ] `@RequestMapping` 경로 + `@GetMapping`/`@PostMapping` 경로 조합이 명세의 전체 URL과 일치하는지 확인
+  - 예: 명세가 `/api/admin/ai-prompt-contents/page`이면 `@RequestMapping("/api/admin/ai-prompt-contents")` + `@GetMapping("/page")`이어야 함
+  - `@RequestMapping("/api/ai-prompt-contents")`로 되어 있으면 `/api/admin/` 접두사가 누락된 것 → 404 발생
+- [ ] 관리자 CRUD API는 `/api/admin/` 접두사 필수, Public API는 `/api/` 접두사 사용 — 명세의 관리자/사용자 구분과 일치하는지 확인
+
+#### LLM API (FastAPI) 엔드포인트
+- [ ] 명세의 **모든** LLM API 엔드포인트에 대해 `@router.get`, `@router.post` 등 매핑이 존재하는지 확인
+  ```bash
+  grep -rn "api/providers\|api/chat/stream" projs/llm-api/app/
+  ```
+- [ ] 매핑이 없는 엔드포인트 → **즉시 구현**
+
+#### FE → API 호출 경로 검증
+- [ ] FE 코드에서 fetch/호출하는 API URL이 BE/LLM API에 실제 존재하는지 확인
+  ```bash
+  grep -rn "fetch\|API_URL" projs/fe-next/src/ | grep -v node_modules
+  ```
+
+### 2️⃣ SecurityConfig permitAll 일치 검증
+
+> 명세에서 "Public", "인증 불필요", "permitAll" 로 표기된 엔드포인트가 SecurityConfig에 **모두** 등록되어 있는지 대조한다.
+
+- [ ] `docs/api/api-admin-spec.md`에서 "permitAll", "Public", "인증 불필요" 키워드로 검색하여 Public 엔드포인트 목록 도출
+- [ ] SecurityConfig.java의 `requestMatchers(...).permitAll()` 목록과 1:1 대조
+- [ ] **명세에 Public인데 SecurityConfig에 없는 항목** → 즉시 추가
+- [ ] 현재 필수 permitAll 항목:
+  ```java
+  .requestMatchers("/hello").permitAll()
+  .requestMatchers("/error").permitAll()
+  .requestMatchers("/api/auth/**").permitAll()
+  .requestMatchers("/api/common-codes/cache/**").permitAll()
+  .requestMatchers("/api/ai-prompt-contents/**").permitAll()
+  .requestMatchers("/api/file/content").permitAll()
+  .requestMatchers("/api/file/download").permitAll()
+  ```
+
+### 3️⃣ FE ↔ API 필드명 컨벤션 검증
+
+> FE(JavaScript)는 camelCase, BE(Java)/LLM API(Python)는 snake_case를 사용한다.
+> 요청/응답 JSON의 필드명이 FE와 API 간에 일치하는지 반드시 검증한다.
+
+- [ ] FE에서 API로 보내는 요청 body의 필드명이 API 스키마와 일치하는지 확인
+- [ ] Python Pydantic 모델에서 FE camelCase 필드를 받으려면 `Field(alias="camelCase")` 설정 필수
+  ```python
+  ✓ persona_id: int = Field(alias="personaId")  # FE에서 personaId로 전송
+  ✗ persona_id: int  # FE가 personaId로 보내면 422 에러
+  ```
+- [ ] Spring Boot DTO는 기본적으로 camelCase이므로 FE와 일치 (별도 설정 불필요)
+- [ ] API 응답 JSON 필드명이 FE에서 사용하는 키와 일치하는지 확인
+- [ ] **LLM API에서 BE API 응답을 파싱할 때 필드명이 BE DTO와 일치하는지 확인**
+  ```python
+  ✓ persona.get("promptContent")   # BE DTO 필드명과 일치
+  ✗ persona.get("instructions")    # BE에 없는 필드 → 항상 빈 값
+  ```
+
+### 4️⃣ API 응답 형식 일치 검증
+
+- [ ] 명세의 Response 예시와 실제 API 응답 JSON 구조가 일치하는지 확인
+- [ ] 필드명(camelCase/snake_case), 타입, 중첩 구조 대조
+- [ ] `ApiResponse` 래퍼 형식 일관성 (`{ "status": "success", "data": ... }`)
+
+### 5️⃣ curl 실행 검증 (런타임)
+
+> BE/LLM API 서버가 실행 중일 때, 명세의 Public 엔드포인트를 실제 curl로 호출하여 200 응답을 확인한다.
+
+- [ ] `curl http://localhost:8080/hello` → 200
+- [ ] `curl http://localhost:8080/api/common-codes/cache/ai_category` → 200
+- [ ] `curl http://localhost:8080/api/ai-prompt-contents/list` → 200
+- [ ] `curl http://localhost:8080/api/ai-prompt-contents/1` → 200 (또는 데이터 없으면 적절한 응답)
+- [ ] `curl http://localhost:9000/health` → 200
+- [ ] `curl http://localhost:9000/api/providers` → 200
+- [ ] 403 응답이 나오면 → SecurityConfig permitAll 누락 의심, 2️⃣ 체크리스트 재확인
 
 ---
 

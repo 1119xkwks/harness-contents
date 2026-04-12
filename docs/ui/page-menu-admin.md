@@ -298,8 +298,9 @@
 |---|--------|------|
 | 1 | No | (순번) |
 | 2 | 코드값 | `codeValue` |
-| 3 | 순서 | `orderSeq` |
-| 4 | 등록일 | `createdAt` |
+| 3 | 코드명 | `codeName` |
+| 4 | 순서 | `orderSeq` |
+| 5 | 등록일 | `createdAt` |
 
 ---
 

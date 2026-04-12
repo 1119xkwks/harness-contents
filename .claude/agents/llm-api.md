@@ -247,13 +247,45 @@ def validate_api_keys():
     print(f"✅ 사용 가능한 LLM: {', '.join(available.keys())}")
 ```
 
+## 가상환경 및 의존성 설치 (Windows 필수)
+
+> **Windows 환경에서는 프로젝트 생성 후 반드시 `.venv` 가상환경을 만들고 의존성을 설치한다.**
+
+### 절차
+
+```bash
+cd projs/llm-api
+
+# 1) 가상환경 생성
+py -m venv .venv
+
+# 2) 가상환경 활성화 (bash/Git Bash)
+source .venv/Scripts/activate
+
+# 3) pip 업그레이드
+py -m pip install --upgrade pip
+
+# 4) 의존성 설치
+pip install -r requirements.txt
+```
+
+### 주의사항
+
+- `requirements.txt`에 버전을 고정(`==`)하지 않고 **최소 버전(`>=`)**으로 지정한다. Python 최신 버전(3.13+)에서 `pydantic-core` 등 Rust 기반 패키지의 사전 빌드 wheel이 없으면 소스 빌드가 실패한다.
+  ```
+  ✓ pydantic>=2.11
+  ✗ pydantic==2.10.3
+  ```
+- `pip install` 완료 후 에러가 없는지 확인한다. `Failed building wheel`, `link.exe failed` 등의 에러가 발생하면 해당 패키지의 버전 제약을 완화한다.
+- `.venv/` 디렉터리는 `.gitignore`에 추가한다.
+
 ## 구현 체크리스트
 
 새로운 LLM API 프로젝트를 만들 때:
 
 - [ ] `projs/llm-api/` 디렉터리 생성
 - [ ] `.env.example` 생성 (API 키 템플릿)
-- [ ] `requirements.txt` 작성 (fastapi, uvicorn, openai, anthropic, google-genai, httpx, python-dotenv)
+- [ ] `requirements.txt` 작성 (fastapi, uvicorn, openai, anthropic, google-genai, httpx, python-dotenv) — **`>=` 최소 버전 사용**
 - [ ] `main.py` — FastAPI 앱, CORS, 라우터 등록
 - [ ] `app/config.py` — 환경변수 로드, API 키 검증
 - [ ] `app/routers/chat.py` — 스트리밍 채팅 엔드포인트
@@ -265,3 +297,5 @@ def validate_api_keys():
 - [ ] `app/models/schemas.py` — Pydantic 요청/응답 모델
 - [ ] CORS 설정 (FE 포트 허용)
 - [ ] API 키 미설정 시 안내 메시지 출력
+- [ ] **Windows: `.venv` 가상환경 생성 + `pip install -r requirements.txt` 성공 확인**
+- [ ] **`.gitignore`에 `.venv/` 추가**

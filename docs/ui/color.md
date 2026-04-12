@@ -10,9 +10,9 @@
 
 ### 허용되는 색상
 
-- **흰색** (`bg-white`, #ffffff)
-- **회색 계열** (`bg-gray-100` ~ `bg-gray-200`, `bg-[#ececec]`, `bg-[#f5f5f5]`)
-- **검은색** (`text-black`, #000000)
+- **흰색** (`sx={{ bgcolor: '#ffffff' }}`)
+- **회색 계열** (`sx={{ bgcolor: '#ececec' }}`, `sx={{ bgcolor: '#f5f5f5' }}`)
+- **검은색** (`sx={{ color: '#000000' }}`)
 
 ### 사용 금지
 
@@ -22,29 +22,29 @@
 
 #### 올바른 사용
 
-```html
-<!-- 헤더 -->
-<header className="bg-white text-black border-b border-[#d0d0d0]">
+```tsx
+{/* 헤더 */}
+<AppBar sx={{ bgcolor: '#fff', color: '#000', borderBottom: '1px solid #d0d0d0' }}>
   ...
-</header>
+</AppBar>
 
-<!-- 사이드바 -->
-<aside className="bg-[#ececec]">
+{/* 사이드바 */}
+<Drawer sx={{ '& .MuiDrawer-paper': { bgcolor: '#ececec' } }}>
   ...
-</aside>
+</Drawer>
 
-<!-- 본문 -->
-<main className="bg-[#f5f5f5]">
+{/* 본문 */}
+<Box component="main" sx={{ bgcolor: '#f5f5f5' }}>
   ...
-</main>
+</Box>
 ```
 
 #### 금지
 
-```html
-<!-- ❌ 큰 영역에 강렬한 색상 사용 금지 -->
-<header className="bg-blue-600">...</header>
-<aside className="bg-indigo-500">...</aside>
+```tsx
+{/* ❌ 큰 영역에 강렬한 색상 사용 금지 */}
+<AppBar sx={{ bgcolor: 'primary.main' }}>...</AppBar>
+<Drawer sx={{ '& .MuiDrawer-paper': { bgcolor: '#5c6bc0' } }}>...</Drawer>
 ```
 
 ---

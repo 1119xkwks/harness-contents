@@ -114,6 +114,8 @@ http.authorizeHttpRequests(auth -> auth
     .requestMatchers("/hello").permitAll()
     .requestMatchers("/error").permitAll()
     .requestMatchers("/api/auth/**").permitAll()
+    .requestMatchers("/api/common-codes/cache/**").permitAll()
+    .requestMatchers("/api/ai-prompt-contents/**").permitAll()
     .requestMatchers("/api/file/content").permitAll()
     .requestMatchers("/api/file/download").permitAll()
     .anyRequest().authenticated()

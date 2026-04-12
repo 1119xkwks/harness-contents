@@ -16,11 +16,11 @@ trigger: /projs-setup
 
 | 에이전트 | 파일 | 역할 | 타입 |
 |---------|------|------|------|
-| 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트, LLM 모델, Python 버전 정보 얻기 | general-purpose |
-| FE 개발자 | `.claude/agents/frontend-developer.md` | FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
-| BE 개발자 | `.claude/agents/backend-developer.md` | BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
-| LLM API 개발자 | `.claude/agents/llm-api.md` | Python FastAPI LLM 스트리밍 채팅 API 서버 생성 | general-purpose |
-| QA 검증 | `.claude/agents/qa.md` | FE/BE/LLM API 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
+| 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트, LLM 모델, Python 버전 정보 얻기 | pre-interview |
+| FE 개발자 | `.claude/agents/frontend-developer.md` | FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | frontend-developer |
+| BE 개발자 | `.claude/agents/backend-developer.md` | BE 프로젝트 생성, MyBatis로 DB 연결 | backend-developer |
+| LLM API 개발자 | `.claude/agents/llm-api.md` | Python FastAPI LLM 스트리밍 채팅 API 서버 생성 | llm-api |
+| QA 검증 | `.claude/agents/qa.md` | FE/BE/LLM API 코드 품질 및 컨벤션 규칙 검증 | qa |
 
 ## 팀 구성 및 실행
 
@@ -67,7 +67,7 @@ pre-interview 완료 후, `reports/01-pre-interview.md`를 읽고 아래 항목�
 1. **`application.yml` DB 접속 정보 확인** — 사전 인터뷰에서 받은 정보가 올바르게 설정되었는지 확인 요청
 2. **`projs/llm-api/.env` API 키 설정 확인** — 사용자가 직접 API 키를 입력했는지 확인 요청
 3. **`docs/db/create-tables.sql` 직접 실행 요청** — 사용자가 DB 클라이언트(pgAdmin, DBeaver 등)에서 직접 DDL을 실행
-4. **테이블 생성 완료 확인** — 사용자가 "완료" 응답할 때까지 대기
+4. **테이블 생성 완료 확인** — 1,2,3번을 진행 하라고 안내 후, "완료"라고 입력해달라고 안내 후, 사용자가 "완료" 응답할 때까지 대기
 
 > **⚠ 금지: `create-tables.sql`을 에이전트가 직접 실행하지 않는다.** DB 스키마 변경은 반드시 사용자가 수동으로 수행한다.
 
@@ -102,7 +102,7 @@ Skill 완료 후 자동으로 다음을 수행합니다:
 
 - ⚠️ 기존 파일을 덮어쓸 수 있습니다
 - ⚠️ 포트 3001이 사용 중이면 변경 필요
-- ⚠️ package.json에 MUI, Tailwind CSS가 설치되어 있어야 함
+- ⚠️ package.json에 MUI (@mui/material, @mui/icons-material, @emotion/react, @emotion/styled)가 설치되어 있어야 함 (Tailwind CSS 사용 금지)
 
 ## 지원
 
