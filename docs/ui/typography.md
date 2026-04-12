@@ -11,7 +11,7 @@
 import { Noto_Sans_KR } from "next/font/google";
 
 const notoSansKR = Noto_Sans_KR({
-  subsets: ["latin", "korean"],
+  subsets: ["latin"],
   weight: ["100", "300", "400", "500", "700", "900"],
 });
 ```
@@ -24,40 +24,34 @@ const notoSansKR = Noto_Sans_KR({
 
 ### 허용된 Weight 값
 
-| Weight | 용도 | Tailwind | React/MUI | 사용 예 |
-|--------|------|----------|-----------|--------|
-| **400** | 본문, 일반 텍스트 | `font-normal` | `fontWeight: 400` | 일반 설명, 본문 내용 |
-| **500** | 강조 텍스트, 서브헤더 | `font-medium` | `fontWeight: 500` | 카드 제목, 라벨 |
-| **700** | 헤더, 주요 강조 | `font-bold` | `fontWeight: 700` | 페이지 제목, 강조 텍스트 |
+| Weight | 용도 | Tailwind 클래스 | 사용 예 |
+|--------|------|-----------------|--------|
+| **400** | 본문, 일반 텍스트 | `font-normal` | 일반 설명, 본문 내용 |
+| **500** | 강조 텍스트, 서브헤더 | `font-medium` | 카드 제목, 라벨 |
+| **700** | 헤더, 주요 강조 | `font-bold` | 페이지 제목, 강조 텍스트 |
 
 ### 사용 금지
 
-❌ **하지 말아야 할 방법:**
-```typescript
-// ❌ 절대 금지
-<Typography fontWeight="bold">텍스트</Typography>
+```html
+<!-- ❌ 절대 금지 -->
+<div style="font-weight: bold">텍스트</div>
 <div style={{ fontWeight: "bold" }}>텍스트</div>
-<div className="font-bold">텍스트</div>  // Tailwind의 font-bold도 사용 가능하지만 명시적 값 권장
 ```
 
-✅ **올바른 방법:**
-```typescript
-// Tailwind CSS
-<Typography fontWeight={700}>텍스트</Typography>
-<Typography fontWeight={500}>텍스트</Typography>
-<Typography fontWeight={400}>텍스트</Typography>
+### 올바른 사용
 
-// 또는 Tailwind 클래스
-<div className="font-normal">본문</div>    // 400
-<div className="font-medium">강조</div>    // 500
-<div className="font-bold">헤더</div>      // 700
+```html
+<!-- ✅ Tailwind 클래스 사용 -->
+<div className="font-normal">본문</div>     <!-- 400 -->
+<div className="font-medium">강조</div>     <!-- 500 -->
+<div className="font-bold">헤더</div>       <!-- 700 -->
 ```
 
 ---
 
 ## Tailwind CSS 설정
 
-`app/globals.css`에서 정의된 custom font weights:
+`globals.css`에서 정의된 custom font weights:
 
 ```css
 @theme inline {
@@ -69,25 +63,31 @@ const notoSansKR = Noto_Sans_KR({
 
 ---
 
-## MUI Typography 사용 예
+## 텍스트 크기 규칙
 
-```typescript
-import { Typography } from "@mui/material";
+| 용도 | Tailwind 클래스 | 크기 |
+|------|-----------------|------|
+| 페이지 제목 | `text-xl` 또는 `text-2xl` | 20px / 24px |
+| 섹션 제목 | `text-lg` | 18px |
+| 카드 제목 | `text-base font-medium` | 16px |
+| 본문 | `text-sm` | 14px |
+| 보조 텍스트 | `text-xs` | 12px |
+| Breadcrumbs | `text-xs` | 12px |
 
-// 본문 (400)
-<Typography variant="body1" fontWeight={400}>
-  일반 본문 텍스트
-</Typography>
+### 사용 예시
 
-// 강조 텍스트 (500)
-<Typography variant="body1" fontWeight={500}>
-  강조된 텍스트
-</Typography>
+```html
+<!-- 페이지 제목 -->
+<h1 className="text-xl font-bold text-gray-900">회원 목록</h1>
 
-// 헤더 (700)
-<Typography variant="h6" fontWeight={700}>
-  헤더 텍스트
-</Typography>
+<!-- 카드 제목 -->
+<h3 className="text-base font-medium text-gray-800">총 회원수</h3>
+
+<!-- 본문 -->
+<p className="text-sm font-normal text-gray-600">설명 텍스트입니다.</p>
+
+<!-- 보조 텍스트 -->
+<span className="text-xs text-gray-400">2026-04-12</span>
 ```
 
 ---
@@ -97,10 +97,10 @@ import { Typography } from "@mui/material";
 1. **일관성 유지**: 모든 텍스트는 400, 500, 700 중 하나의 weight를 사용
 2. **가독성**: 너무 많은 weight를 섞어 사용하지 않기
 3. **계층구조**: weight로 시각적 계층을 명확하게 표현
-   - 제목: 700
-   - 서브제목: 500
-   - 본문: 400
+   - 제목: 700 (`font-bold`)
+   - 서브제목: 500 (`font-medium`)
+   - 본문: 400 (`font-normal`)
 
 ---
 
-**마지막 수정**: 2026-04-10
+**마지막 수정**: 2026-04-12

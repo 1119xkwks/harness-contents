@@ -26,7 +26,7 @@ FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전
 
 ### 프로젝트 구조 검증
 - Next.js 14+ 프로젝트 구조 확인 (projs/fe-next)
-- 필수 패키지 설치 여부 확인 (React, Next.js, MUI, @emotion/react, @emotion/styled)
+- 필수 패키지 설치 여부 확인 (React, Next.js, tailwindcss)
 - package.json 및 tsconfig.json 존재 여부 확인
 
 ### 파일 생성
@@ -46,14 +46,13 @@ FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전
 
 #### 레이아웃 & 설정 (app/)
 - **providers.tsx**
-  - MUI ThemeProvider 설정
-  - 색상 팔레트 정의
-  - 타이포그래피 설정
+  - AuthProvider, MenuProvider 등 Context 래핑
+  - 전역 상태 관리 설정
 
 - **globals.css**
-  - 글로벌 스타일
-  - Sidebar, AppBar, Breadcrumbs, 통계 카드 스타일
-  - 모바일 반응형 스타일
+  - Tailwind CSS directives (`@tailwind base; @tailwind components; @tailwind utilities;`)
+  - 커스텀 CSS 변수 (색상, 간격 등)
+  - Tailwind으로 처리하기 어려운 글로벌 스타일
 
 - **layout.tsx**
   - 루트 레이아웃 설정
@@ -68,7 +67,7 @@ FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전
     - 총 회원수 (`GET /api/users/page?size=1` → `totalElements`)
     - 최근 가입자 수 (최근 7일 기준)
     - 메뉴 수 (`GET /api/admin/menus/page?size=1` → `totalElements`)
-  - CSS 모듈 스타일링
+  - Tailwind CSS 스타일링
 
 ### 1. 페이지 구조 생성
 - 새로운 페이지 파일 생성
@@ -96,9 +95,8 @@ FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전
 ### 기술 스택
 - React 18+
 - Next.js 14+
-- MUI 5+ (Material-UI)
-- Emotion (@emotion/react, @emotion/styled)
-- CSS Modules
+- Tailwind CSS 4+
+- Headless UI (필요시 — 접근성 지원 모달, 드롭다운 등)
 
 ### 완료 조건
 - ✅ 모든 파일 생성 완료
@@ -163,7 +161,7 @@ interface MenuContextType {
 ### Sidebar 변경
 
 - MenuContext에서 메뉴 데이터를 가져와서 렌더링
-- `menuIcon` 필드를 MUI 아이콘으로 매핑
+- `menuIcon` 필드를 아이콘으로 매핑 (SVG 또는 아이콘 라이브러리)
 - 로딩 중이면 Skeleton 표시
 - 메뉴가 비어있으면 안내 메시지 표시
 
@@ -391,7 +389,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 
 ### 구성
 
-- 중앙 정렬 카드 (MUI Card)
+- 중앙 정렬 카드 (Tailwind 유틸리티 클래스)
 - 입력: ID, PW
 - 로그인 버튼
 - 성공 → Cookie에 토큰 저장 → `redirect` 파라미터 경로 또는 `/admin`로 이동
@@ -419,7 +417,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 - **AI 선택 화면**: `docs/ui/mockup/mockup-01-select.html`
 - **채팅 화면**: `docs/ui/mockup/mockup-02-chat.html`
 
-목업 HTML을 브라우저에서 열어 레이아웃, 색상, 간격을 확인한 뒤 동일하게 구현한다.
+목업 HTML을 브라우저에서 열어 **화면 모양(레이아웃, 색상, 간격)만 참고**한다. 목업의 CSS 코드를 그대로 사용하지 않고, **Tailwind CSS 유틸리티 클래스로 동일한 디자인을 구현**한다.
 
 ### 라우팅
 
@@ -474,7 +472,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 
 **생성할 파일** (위의 "파일 생성" 섹션 참조):
 - 컴포넌트: Sidebar.tsx, MainLayout.tsx
-- 레이아웃: providers.tsx, globals.css, layout.tsx
+- 설정: providers.tsx, globals.css, layout.tsx, tailwind.config.ts
 - 페이지: page.tsx (+ CSS 모듈)
 - 문서: docs/ui/color.md, typography.md, layout.md
 

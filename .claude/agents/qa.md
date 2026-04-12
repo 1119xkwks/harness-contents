@@ -38,7 +38,7 @@ allowedTools:
   ```
 
 #### 필수 파일
-- [ ] `package.json` - Next.js 14+, React 18+ 확인
+- [ ] `package.json` - Next.js 14+, React 18+, tailwindcss 확인
 - [ ] `tsconfig.json` - TypeScript 설정 확인
 - [ ] `.env.local` - 환경변수 설정 (필요시)
 
@@ -78,9 +78,8 @@ allowedTools:
 
 #### providers.tsx
 - [ ] 파일: `app/providers.tsx`
-- [ ] MUI ThemeProvider 설정
-- [ ] 색상 팔레트 정의
-- [ ] 타이포그래피 설정
+- [ ] AuthProvider, MenuProvider 등 Context 래핑
+- [ ] 전역 상태 관리 설정
 
 ### 4️⃣ 페이지 검증
 
@@ -99,7 +98,7 @@ allowedTools:
 - [ ] MainLayout으로 래핑 필수
 - [ ] breadcrumbs 속성 정의
 - [ ] docs/ui/ 가이드라인 준수
-- [ ] CSS Module 사용
+- [ ] Tailwind CSS 유틸리티 클래스 사용
 
 ### 5️⃣ 페이징 리스트 UI 검증 (docs/ui/paging-list-ui-admin.md)
 
@@ -156,15 +155,17 @@ allowedTools:
 - [ ] 간격(spacing), padding, margin 규칙
 - [ ] 반응형 브레이크포인트 정의
 
-#### CSS 검증
-- [ ] globals.css - 글로벌 스타일
-- [ ] CSS Modules - 컴포넌트별 스타일
-- [ ] 모바일 반응형 (@media queries)
-  ```css
-  ✓ 태블릿: 768px
-  ✓ 모바일: 480px
-  ✓ 데스크톱: 1024px+
+#### CSS 검증 (Tailwind CSS)
+- [ ] globals.css에 Tailwind directives 포함 (`@tailwind base; @tailwind components; @tailwind utilities;`)
+- [ ] Tailwind 유틸리티 클래스로 스타일링 (inline style, CSS Modules 사용 최소화)
+- [ ] 모바일 반응형 (Tailwind breakpoints)
   ```
+  ✓ sm: 640px
+  ✓ md: 768px
+  ✓ lg: 1024px
+  ✓ xl: 1280px
+  ```
+- [ ] 목업 HTML의 CSS를 그대로 복사하지 않음 (화면 모양만 참고, Tailwind으로 재구현)
 
 ### 7️⃣ 브라우저 내장 함수 사용 금지 검증
 
@@ -228,10 +229,10 @@ allowedTools:
 - [ ] AppBar 통일
 - [ ] Breadcrumbs 경로 표시
 
-#### MUI 컴포넌트 사용
-- [ ] Button, TextField, Card 등 MUI 컴포넌트 사용
-- [ ] Emotion (@emotion) 스타일링
-- [ ] 커스텀 스타일 최소화
+#### Tailwind CSS 스타일링
+- [ ] 모든 UI 요소에 Tailwind 유틸리티 클래스 사용
+- [ ] MUI, Emotion, CSS Modules 사용 **없음**
+- [ ] 커스텀 CSS 최소화 (Tailwind으로 처리 가능한 것은 Tailwind 사용)
 
 ### 1️⃣2️⃣ JWT 토큰 보안 검증
 

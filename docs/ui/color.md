@@ -10,29 +10,43 @@
 
 ### 허용되는 색상
 
-- **흰색** (`#ffffff` 또는 `white`)
-- **회색 계열** (라이트 그레이, 다크 그레이)
-- **검은색** (`#000000` 또는 `black`)
+- **흰색** (`bg-white`, #ffffff)
+- **회색 계열** (`bg-gray-100` ~ `bg-gray-200`, `bg-[#ececec]`, `bg-[#f5f5f5]`)
+- **검은색** (`text-black`, #000000)
 
 ### 사용 금지
 
-❌ 큰 레이아웃 영역에 primary, secondary 등 강렬한 브랜드 색상 사용 금지
+큰 레이아웃 영역에 primary, secondary 등 강렬한 브랜드 색상 사용 금지
 
 ### 예시
 
-#### ✅ 올바른 사용
+#### 올바른 사용
 
-**헤더 (AppBar)**
-```typescript
-<AppBar
-  sx={{
-    backgroundColor: "white",  // 중립적인 흰색
-    color: "black",
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",  // 미세한 그림자로 구분
-  }}
->
+```html
+<!-- 헤더 -->
+<header className="bg-white text-black border-b border-[#d0d0d0]">
+  ...
+</header>
+
+<!-- 사이드바 -->
+<aside className="bg-[#ececec]">
+  ...
+</aside>
+
+<!-- 본문 -->
+<main className="bg-[#f5f5f5]">
+  ...
+</main>
+```
+
+#### 금지
+
+```html
+<!-- ❌ 큰 영역에 강렬한 색상 사용 금지 -->
+<header className="bg-blue-600">...</header>
+<aside className="bg-indigo-500">...</aside>
 ```
 
 ---
 
-**마지막 수정**: 2026-04-10
+**마지막 수정**: 2026-04-12
