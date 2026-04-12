@@ -1,4 +1,4 @@
-관리자---
+---
 name: projs-setup
 description: FE, BE, LLM API 프로젝트를 자동으로 생성하고 검증까지 수행
 trigger: /projs-setup
