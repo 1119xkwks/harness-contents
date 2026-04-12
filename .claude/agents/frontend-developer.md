@@ -1,7 +1,7 @@
 ---
 name: frontend-developer
 description: "프런트엔드 코드 개발자입니다."
-model: sonnet
+model: opus
 permissionMode: bypassPermissions
 color: cyan
 allowedTools:
