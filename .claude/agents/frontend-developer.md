@@ -36,15 +36,6 @@ color: cyan
   - Breadcrumbs 지원
   - 모바일 메뉴 토글 버튼
 
-#### 상수 (app/constants/)
-- **menu.ts**
-  - 2-depth 메뉴 데이터 구조
-  - 4개 메인 메뉴 항목:
-    - 📊 대시보드 (개요, 통계)
-    - 👥 사용자 관리 (사용자 목록, 권한 관리)
-    - 📈 리포트 (판매 리포트, 성능 분석)
-    - ⚙️ 설정 (계정 설정, 보안 설정, 시스템 설정)
-
 #### 레이아웃 & 설정 (app/)
 - **providers.tsx**
   - MUI ThemeProvider 설정
@@ -65,12 +56,10 @@ color: cyan
   - 대시보드/개요 페이지
   - MainLayout으로 래핑
   - 환영 메시지 섹션
-  - 주요 지표 섹션 (4개 통계 카드)
-    - 총 사용자
-    - 오늘 방문자
-    - 월간 리포트
-    - 시스템 상태
-  - 빠른 실행 섹션 (3개 버튼)
+  - 주요 지표 섹션 (3개 통계 카드) — `docs/ui/page-menu-admin.md` 대시보드 섹션 참조
+    - 총 회원수 (`GET /api/users/page?size=1` → `totalElements`)
+    - 최근 가입자 수 (최근 7일 기준)
+    - 메뉴 수 (`GET /api/admin/menus/page?size=1` → `totalElements`)
   - CSS 모듈 스타일링
 
 ### 1. 페이지 구조 생성
@@ -165,7 +154,6 @@ interface MenuContextType {
 
 ### Sidebar 변경
 
-- `app/constants/menu.ts`의 하드코딩 메뉴 배열 **삭제**
 - MenuContext에서 메뉴 데이터를 가져와서 렌더링
 - `menuIcon` 필드를 MUI 아이콘으로 매핑
 - 로딩 중이면 Skeleton 표시
@@ -371,6 +359,64 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
   2. `clearTokens()` — Cookie 삭제
   3. `/admin/login`으로 리다이렉트
 
+---
+
+## 사용자 홈페이지 (AI 대화방)
+
+> 관리자 페이지(`/admin`)와 별도로, 사용자가 접근하는 홈페이지를 구현한다.
+> 로그인 없이 접근 가능하며, 관리자가 등록한 AI 캐릭터를 선택하여 채팅한다.
+
+### 필수 참조 목업
+
+- **AI 선택 화면**: `docs/ui/mockup/mockup-01-select.html`
+- **채팅 화면**: `docs/ui/mockup/mockup-02-chat.html`
+
+목업 HTML을 브라우저에서 열어 레이아웃, 색상, 간격을 확인한 뒤 동일하게 구현한다.
+
+### 라우팅
+
+| 경로 | 페이지 | 목업 | 설명 |
+|------|--------|------|------|
+| `/` | AI 선택 화면 | `mockup-01-select.html` | 카드 그리드로 AI 캐릭터 목록 표시 |
+| `/chat/[id]` | 채팅 화면 | `mockup-02-chat.html` | 선택한 AI와 카카오톡 스타일 대화 |
+
+- `[id]`는 `aiPromptContentsSeq` (DB PK, 숫자) (예: `/chat/1`, `/chat/5`)
+- `/` 에서 카드 클릭 시 해당 AI의 `/chat/[id]`으로 이동
+
+### 디자인 규칙
+
+| 항목 | 값 | 비고 |
+|------|-----|------|
+| 채팅 배경색 | `#abc1d1` | 카카오톡 스타일 |
+| 사용자 말풍선 | `#fef01b` | 노란색 |
+| AI 말풍선 | `#ffffff` | 흰색 |
+| 말풍선 radius | `16px` | 꼬리 쪽 `4px` |
+| 아바타 | 이모지 + 그라데이션 배경 | 원형, 캐릭터별 색상 |
+| 카드 hover | `border-color: #4a90d9` | 파란색 테두리 |
+
+### AI 선택 화면 (`/`) 구성
+
+- 상단 헤더: 타이틀 "AI 대화방" + 설명 "대화할 AI를 선택해주세요"
+- 카드 그리드: AI 캐릭터별 아바타 + 이름 + 설명 + 태그
+- 카드 클릭 → `/chat/[name]`으로 이동
+- AI 목록은 BE API에서 조회 (관리자가 등록한 시스템 프롬프트 기반)
+
+### 채팅 화면 (`/chat/[name]`) 구성
+
+- 상단 헤더: 뒤로가기(`/`) + AI 아바타 + AI 이름
+- 채팅 영역: 카카오톡 말풍선 스타일
+  - AI 메시지: 좌측 정렬 (아바타 + 이름 + 흰색 말풍선 + 시간)
+  - 사용자 메시지: 우측 정렬 (노란색 말풍선 + 시간)
+  - 타이핑 인디케이터: 점 3개 애니메이션
+- 하단 입력: 텍스트 입력 + 전송 버튼 (노란색 원형)
+
+### 인증
+
+- 사용자 홈페이지(`/`, `/chat/*`)는 **로그인 불필요**
+- middleware에서 이 경로들을 PUBLIC_PATHS에 추가할 것
+
+---
+
 ## 호출 프롬프트
 
 ```
@@ -380,7 +426,6 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 
 **생성할 파일** (위의 "파일 생성" 섹션 참조):
 - 컴포넌트: Sidebar.tsx, MainLayout.tsx
-- 상수: menu.ts
 - 레이아웃: providers.tsx, globals.css, layout.tsx
 - 페이지: page.tsx (+ CSS 모듈)
 - 문서: docs/ui/color.md, typography.md, layout.md
@@ -389,7 +434,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 1. 생성하는 모든 파일의 색상, 타이포그래피, 레이아웃 규칙은 docs/ui/ 문서에 명시
 2. 이후 새로운 페이지 추가 시 docs/ui/ 가이드라인을 반드시 준수
 3. 모든 컴포넌트/페이지는 MainLayout으로 래핑
-4. 2-depth 메뉴 구조: 대시보드, 사용자관리, 리포트, 설정 (각 2-3개 서브메뉴)
+4. 2-depth 메뉴 구조: BE API(`/api/admin/menus/tree`)에서 동적 조회 — `docs/ui/page-menu-admin.md` 참조
 
 모든 파일을 생성하고 완료해줘.
 ```

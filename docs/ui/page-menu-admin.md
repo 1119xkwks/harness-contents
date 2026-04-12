@@ -303,6 +303,79 @@
 
 ---
 
+## 10. AI 프롬프트 목록 (`/admin/content/ai-prompts`)
+
+| 항목 | 값 |
+|------|-----|
+| **유형** | `LIST` |
+| **메뉴** | 콘텐츠 > AI 프롬프트 |
+| **API** | `GET /api/admin/ai-prompt-contents/page` |
+
+### 구성
+
+- **검색 영역**: 제목(title) 입력 + 카테고리(categoryCode) 선택 + 검색 버튼
+  - 카테고리 선택: `GET /api/common-codes/detail/page?codeGroup=ai_category` 로 목록 조회하여 드롭다운 구성
+- **테이블**: 페이징 목록
+- **행 클릭**: `/admin/content/ai-prompts/detail/{aiPromptContentsSeq}` 상세 페이지로 이동
+- **등록 버튼**: `/admin/content/ai-prompts/detail/new` 로 이동
+
+### 테이블 컬럼
+
+| # | 컬럼명 | 필드 | 정렬 | 비고 |
+|---|--------|------|------|------|
+| 1 | No | (순번) | - | |
+| 2 | 아바타 | `profileImage` | - | 32×32 원형 썸네일. 이미지 없으면 제목 첫 글자를 배경색+흰색 텍스트로 표시 (아바타 fallback) |
+| 3 | 제목 | `title` | - | |
+| 4 | 소개 | `intro` | - | 말줄임 처리 (1줄) |
+| 5 | 카테고리 | `categoryCode` | - | code_name으로 표시 (예: 철학, 법률) |
+| 6 | 등록일 | `createdAt` | 가능 | |
+
+---
+
+## 11. AI 프롬프트 상세 (`/admin/content/ai-prompts/detail/:aiPromptContentsSeq`)
+
+| 항목 | 값 |
+|------|-----|
+| **유형** | `DETAIL` |
+| **메뉴** | 콘텐츠 > AI 프롬프트 (Breadcrumb에서 표시) |
+| **API** | `GET /api/admin/ai-prompt-contents/{aiPromptContentsSeq}`, `POST /api/admin/ai-prompt-contents/create`, `POST /api/admin/ai-prompt-contents/update/{aiPromptContentsSeq}`, `POST /api/admin/ai-prompt-contents/delete/{aiPromptContentsSeq}` |
+
+### 구성
+
+- **모드**: 조회 / 생성 / 수정 (URL 파라미터로 구분)
+  - `/admin/content/ai-prompts/detail/new` → 생성 모드
+  - `/admin/content/ai-prompts/detail/{aiPromptContentsSeq}` → 조회 모드 (수정 버튼 클릭 시 수정 모드)
+
+### 아바타 이미지 (폼 최상단)
+
+- 폼 영역 최상단에 아바타 이미지 레이아웃 배치
+- **구성**: 좌측 라벨("아바타 이미지") + 이미지 미리보기 영역 + 우측 하단 "업로드" 버튼
+- **미리보기**: 등록된 이미지가 없으면 제목 첫 글자 아바타 fallback 표시, 있으면 썸네일 표시
+- **모드별 동작**:
+  - 조회 모드: 이미지만 표시, 업로드 버튼 숨김
+  - 생성 모드: 아바타 이미지 영역 숨김 (업로드 불가)
+  - 수정 모드: 업로드 버튼 클릭 → 파일 선택 → 즉시 서버 업로드(`POST /api/file/upload`) → 업로드 완료 후 결과 이미지 즉시 반영 (저장 버튼과 무관하게 독립 동작)
+
+### 폼 필드
+
+| # | 라벨 | 필드 | 생성 | 수정 | 조회 |
+|---|------|------|------|------|------|
+| 1 | 제목 | `title` | 입력 | 입력 | 읽기전용 |
+| 2 | 카테고리 | `categoryCode` | 선택(드롭다운) | 선택(드롭다운) | 읽기전용 (code_name 표시) |
+| 3 | 소개 | `intro` | 입력 | 입력 | 읽기전용 |
+| 4 | 프롬프트 내용 | `promptContent` | 입력(textarea) | 입력(textarea) | 읽기전용 |
+
+- **카테고리 드롭다운**: `GET /api/common-codes/detail/page?codeGroup=ai_category` 로 조회, `code_value`를 값으로, `code_name`을 표시명으로 사용
+- **프롬프트 내용**: textarea 높이 최소 10줄, 모노스페이스 폰트 적용
+
+### 버튼
+
+- 조회 모드: 수정, 삭제, 목록
+- 생성 모드: 저장, 취소
+- 수정 모드: 저장, 취소
+
+---
+
 ## 페이지 총 요약
 
 | # | URL | 페이지명 | 유형 | 비고 |
@@ -316,10 +389,12 @@
 | 7 | `/admin/system/roles/detail/:id` | 권한 상세 | `DETAIL` | 조회/생성/수정 |
 | 8 | `/admin/system/role-menus` | 권한별 메뉴 | `MAPPING` | 좌:권한 / 우:메뉴트리 체크 |
 | 9 | `/admin/system/codes` | 공통코드 관리 | `MASTER_DETAIL` | 좌:그룹 / 우:세부 |
+| 10 | `/admin/content/ai-prompts` | AI 프롬프트 목록 | `LIST` | 아바타 + 검색 + 페이징 |
+| 11 | `/admin/content/ai-prompts/detail/:id` | AI 프롬프트 상세 | `DETAIL` | 조회/생성/수정 + 아바타 업로드 |
 
 ---
 
 ## 마지막 수정
 
 - **작성일**: 2026-04-11
-- **최종 수정**: 2026-04-11
+- **최종 수정**: 2026-04-12

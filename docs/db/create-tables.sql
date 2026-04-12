@@ -62,9 +62,9 @@ CREATE SEQUENCE seq_common_codes
 -- 테이블 생성
 CREATE TABLE common_codes (
   common_codes_seq BIGINT PRIMARY KEY DEFAULT nextval('seq_common_codes'),
-  code_name VARCHAR(50) NOT NULL,
-  code_value VARCHAR(200) NOT NULL,
-  is_group_yn CHAR(1) NOT NULL,
+  code_group VARCHAR(50) NOT NULL,
+  code_value VARCHAR(50) NOT NULL,
+  code_name VARCHAR(200) NOT NULL,
   order_seq INT NOT NULL DEFAULT 0,
   is_deleted CHAR(1) DEFAULT 'N' NOT NULL,
   deleted_at TIMESTAMP,
@@ -72,17 +72,17 @@ CREATE TABLE common_codes (
   created_at TIMESTAMP NOT NULL,
   updated_by INT,
   updated_at TIMESTAMP,
-  CONSTRAINT uni_common_codes UNIQUE (code_name, code_value)
+  CONSTRAINT uni_common_codes UNIQUE (code_group, code_value)
 );
 
 -- 테이블 코멘트
-COMMENT ON TABLE common_codes IS '시스템에서 사용하는 공통 코드 및 코드값을 관리하는 테이블. 그룹 코드와 상세 코드를 모두 관리 가능';
+COMMENT ON TABLE common_codes IS '시스템에서 사용하는 공통 코드 및 코드값을 관리하는 테이블. code_group = code_value이면 그룹코드';
 
 -- 컬럼 코멘트
 COMMENT ON COLUMN common_codes.common_codes_seq IS '공통코드 고유 식별자';
-COMMENT ON COLUMN common_codes.code_name IS '코드 명';
-COMMENT ON COLUMN common_codes.code_value IS '코드 값';
-COMMENT ON COLUMN common_codes.is_group_yn IS '그룹코드 여부 (Y/N)';
+COMMENT ON COLUMN common_codes.code_group IS '코드 그룹 (그룹코드일 때 code_value와 동일)';
+COMMENT ON COLUMN common_codes.code_value IS '코드 값 (영문 식별자)';
+COMMENT ON COLUMN common_codes.code_name IS '코드 표시명 (한글 등)';
 COMMENT ON COLUMN common_codes.order_seq IS '코드 순서 정렬 지정';
 COMMENT ON COLUMN common_codes.is_deleted IS '삭제 여부 (Y/N)';
 COMMENT ON COLUMN common_codes.deleted_at IS '삭제 일시';
@@ -91,7 +91,7 @@ COMMENT ON COLUMN common_codes.created_at IS '작성 일시';
 COMMENT ON COLUMN common_codes.updated_by IS '수정자 ID';
 COMMENT ON COLUMN common_codes.updated_at IS '수정 일시';
 
--- 인덱스: UNIQUE(code_name, code_value)가 자동 생성하므로 별도 인덱스 불필요
+-- 인덱스: UNIQUE(code_group, code_value)가 자동 생성하므로 별도 인덱스 불필요
 
 -- ============================================================
 -- 3. ADMIN_MENUS TABLE (관리자 메뉴 테이블)
@@ -363,10 +363,63 @@ COMMENT ON COLUMN attachment_files.updated_at IS '수정 일시';
 CREATE INDEX idx_attachment_files ON attachment_files(attachments_seq, order_seq);
 
 -- ============================================================
--- 9. INITIAL DATA (초기 데이터)
+-- 9. AI_PROMPT_CONTENTS TABLE (AI 프롬프트 게시판 테이블)
 -- ============================================================
 
-/*
+-- SEQUENCE 생성
+CREATE SEQUENCE seq_ai_prompt_contents
+  START WITH 1
+  INCREMENT BY 1
+  NO MINVALUE
+  CACHE 1;
+
+-- 테이블 생성
+CREATE TABLE ai_prompt_contents (
+  ai_prompt_contents_seq BIGINT PRIMARY KEY DEFAULT nextval('seq_ai_prompt_contents'),
+  title VARCHAR(50) NOT NULL,
+  intro VARCHAR(200),
+  prompt_content TEXT NOT NULL,
+  category_code VARCHAR(50) NOT NULL,
+  is_deleted CHAR(1) DEFAULT 'N' NOT NULL,
+  deleted_at TIMESTAMP,
+  created_by INT NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_by INT,
+  updated_at TIMESTAMP
+);
+
+-- 테이블 코멘트
+COMMENT ON TABLE ai_prompt_contents IS 'AI 페르소나 프롬프트를 관리하는 게시판 테이블. LLM 대화 시 system prompt(instructions)로 사용';
+
+-- 컬럼 코멘트
+COMMENT ON COLUMN ai_prompt_contents.ai_prompt_contents_seq IS 'AI 프롬프트 고유 식별자';
+COMMENT ON COLUMN ai_prompt_contents.title IS '프롬프트 제목 (예: 어린왕자, 우영우 변호사)';
+COMMENT ON COLUMN ai_prompt_contents.intro IS '프롬프트 소개글';
+COMMENT ON COLUMN ai_prompt_contents.prompt_content IS 'LLM에 전달할 system prompt 본문';
+COMMENT ON COLUMN ai_prompt_contents.category_code IS 'AI 카테고리 코드 (common_codes: code_group=ai_category의 code_value)';
+COMMENT ON COLUMN ai_prompt_contents.is_deleted IS '삭제 여부 (Y/N)';
+COMMENT ON COLUMN ai_prompt_contents.deleted_at IS '삭제 일시';
+COMMENT ON COLUMN ai_prompt_contents.created_by IS '작성자 ID';
+COMMENT ON COLUMN ai_prompt_contents.created_at IS '작성 일시';
+COMMENT ON COLUMN ai_prompt_contents.updated_by IS '수정자 ID';
+COMMENT ON COLUMN ai_prompt_contents.updated_at IS '수정 일시';
+
+
+-- ============================================================
+-- 10. INITIAL DATA (초기 데이터)
+-- ============================================================
+
+-- 기존 데이터 초기화 (FK 의존 순서: 자식 → 부모)
+TRUNCATE TABLE admin_role_menus RESTART IDENTITY CASCADE;
+TRUNCATE TABLE admin_role_users RESTART IDENTITY CASCADE;
+TRUNCATE TABLE admin_roles RESTART IDENTITY CASCADE;
+TRUNCATE TABLE admin_menus RESTART IDENTITY CASCADE;
+TRUNCATE TABLE attachment_files RESTART IDENTITY CASCADE;
+TRUNCATE TABLE attachments RESTART IDENTITY CASCADE;
+TRUNCATE TABLE common_codes RESTART IDENTITY CASCADE;
+TRUNCATE TABLE ai_prompt_contents RESTART IDENTITY CASCADE;
+TRUNCATE TABLE users RESTART IDENTITY CASCADE;
+
 -- 초기 관리자 계정
 -- admin / admin1234
 INSERT INTO users (id, pw, name, is_admin, is_deleted, created_by, created_at)
@@ -384,7 +437,9 @@ VALUES ('대시보드', NULL, 'mdi-view-dashboard', 1, 1, 'Y', 'N', currval('seq
 INSERT INTO admin_menus (menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
 VALUES ('회원 관리', NULL, 'mdi-account-group', 1, 2, 'Y', 'N', currval('seq_users'), NOW());
 INSERT INTO admin_menus (menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
-VALUES ('시스템 관리', NULL, 'mdi-cog', 1, 3, 'Y', 'N', currval('seq_users'), NOW());
+VALUES ('시스템 관리', NULL, 'mdi-cog', 1, 4, 'Y', 'N', currval('seq_users'), NOW());
+INSERT INTO admin_menus (menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
+VALUES ('콘텐츠', NULL, 'mdi-text-box-multiple-outline', 1, 3, 'Y', 'N', currval('seq_users'), NOW());
 
 -- 메뉴: 2depth (소메뉴) - parent_seq는 서브쿼리로 1depth PK 참조
 -- 대시보드 > 대시보드
@@ -405,6 +460,9 @@ VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '시스템 �
 -- 시스템 관리 > 공통코드 관리
 INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
 VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '시스템 관리' AND menu_depth = 1 AND is_deleted = 'N'), '공통코드 관리', '/system/codes', NULL, 2, 4, 'Y', 'N', currval('seq_users'), NOW());
+-- 콘텐츠 > AI 프롬프트
+INSERT INTO admin_menus (parent_seq, menu_name, menu_url, menu_icon, menu_depth, order_seq, is_active, is_deleted, created_by, created_at)
+VALUES ((SELECT admin_menus_seq FROM admin_menus WHERE menu_name = '콘텐츠' AND menu_depth = 1 AND is_deleted = 'N'), 'AI 프롬프트', '/content/ai-prompts', NULL, 2, 1, 'Y', 'N', currval('seq_users'), NOW());
 
 -- 역할-사용자 매핑: admin 계정에 system 역할 부여
 INSERT INTO admin_role_users (admin_roles_seq, users_seq, is_deleted, created_by, created_at)
@@ -432,46 +490,46 @@ SELECT
 FROM admin_menus am
 WHERE am.is_deleted = 'N'
   AND (
-    am.menu_name IN ('대시보드', '회원 관리')
+    am.menu_name IN ('대시보드', '회원 관리', '콘텐츠')
     OR am.parent_seq IN (
       SELECT admin_menus_seq FROM admin_menus
-      WHERE menu_name IN ('대시보드', '회원 관리') AND menu_depth = 1 AND is_deleted = 'N'
+      WHERE menu_name IN ('대시보드', '회원 관리', '콘텐츠') AND menu_depth = 1 AND is_deleted = 'N'
     )
   );
-*/
 
--- ============================================================
--- 10. CONSTRAINTS VERIFICATION
--- ============================================================
+-- 공통코드: ai_category (AI 카테고리)
+-- code_group = code_value → 그룹코드
+INSERT INTO common_codes (code_group, code_value, code_name, order_seq, is_deleted, created_by, created_at)
+VALUES ('ai_category', 'ai_category', 'AI 카테고리', 0, 'N', currval('seq_users'), NOW());
+INSERT INTO common_codes (code_group, code_value, code_name, order_seq, is_deleted, created_by, created_at)
+VALUES ('ai_category', 'philosophy', '철학', 1, 'N', currval('seq_users'), NOW());
+INSERT INTO common_codes (code_group, code_value, code_name, order_seq, is_deleted, created_by, created_at)
+VALUES ('ai_category', 'law', '법률', 2, 'N', currval('seq_users'), NOW());
+INSERT INTO common_codes (code_group, code_value, code_name, order_seq, is_deleted, created_by, created_at)
+VALUES ('ai_category', 'cooking', '요리', 3, 'N', currval('seq_users'), NOW());
+INSERT INTO common_codes (code_group, code_value, code_name, order_seq, is_deleted, created_by, created_at)
+VALUES ('ai_category', 'travel', '여행', 4, 'N', currval('seq_users'), NOW());
 
--- Constraint 확인
-SELECT constraint_name, constraint_type, table_name
-FROM information_schema.table_constraints
-WHERE table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus', 'attachments', 'attachment_files')
-ORDER BY table_name, constraint_name;
+-- AI 프롬프트 초기 데이터
+INSERT INTO ai_prompt_contents (title, intro, prompt_content, category_code, is_deleted, created_by, created_at)
+VALUES (
+  '어린왕자',
+  'B612 소행성에서 온 순수한 영혼의 왕자',
+  '당신은 생텍쥐베리의 ''어린 왕자''입니다. 다음 특성을 따라주세요:
+1. 순수한 관점으로 세상을 바라봅니다.
+2. "어째서?"라는 질문을 자주 하면 호기심이 많습니다.
+3. 철학적 통찰을 단순하게 표현합니다.
+4. "어른들은 참 이상해요"라는 표현을 씁니다.
+5. B-612 소행성에서 왔으며 장미와의 관계를 언급합니다.
+6. 여우의 "길들임"과 "책임"에 대한 교훈을 중요시합니다.
+7. "중요한 것은 눈에 보이지 않아"라는 문장을 사용합니다.
+8. 공손하고 친절한 말투를 사용합니다.
+9. 비유와 은유로 복잡한 개념을 설명합니다.
+항상 간결하게 답변하세요. 길어야 두세 문장으로 응답하고, 어린 왕자의 순수함과 지혜를 담아내세요.
+복잡한 주제도 본질적으로 단순화하여 설명하세요.',
+  'philosophy',
+  'N', currval('seq_users'), NOW()
+);
 
--- ============================================================
--- 11. SEQUENCE VERIFICATION
--- ============================================================
+commit;
 
--- SEQUENCE 확인
-SELECT sequence_name, start_value, increment_by, cache_size
-FROM information_schema.sequences
-WHERE sequence_name IN ('seq_users', 'seq_common_codes', 'seq_admin_menus', 'seq_admin_roles', 'seq_admin_role_users', 'seq_admin_role_menus', 'seq_attachments', 'seq_attachment_files')
-ORDER BY sequence_name;
-
--- ============================================================
--- 12. TABLE & COLUMN COMMENTS VERIFICATION
--- ============================================================
-
--- 테이블 코멘트 확인
-SELECT table_name, obj_description(('public.' || table_name)::regclass, 'pg_class') AS table_comment
-FROM information_schema.tables
-WHERE table_schema = 'public' AND table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus', 'attachments', 'attachment_files')
-ORDER BY table_name;
-
--- 컬럼 코멘트 확인
-SELECT table_name, column_name, col_description((table_name)::regclass, ordinal_position) AS column_comment
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name IN ('users', 'common_codes', 'admin_menus', 'admin_roles', 'admin_role_users', 'admin_role_menus', 'attachments', 'attachment_files')
-ORDER BY table_name, ordinal_position;

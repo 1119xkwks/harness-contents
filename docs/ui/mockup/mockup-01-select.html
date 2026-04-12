@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 대화방 - AI 선택</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', -apple-system, sans-serif; background: #f5f5f5; min-height: 100vh; }
+
+  /* Header */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px 24px;
+    text-align: center;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+  .header p  { font-size: 13px; color: #888; margin-top: 4px; }
+
+  /* Main */
+  .main { max-width: 720px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  .section-title {
+    font-size: 14px; font-weight: 600; color: #666;
+    margin-bottom: 12px; padding-left: 4px;
+  }
+
+  /* Card Grid */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .card:hover {
+    border-color: #4a90d9;
+    box-shadow: 0 4px 16px rgba(74,144,217,0.15);
+    transform: translateY(-2px);
+  }
+
+  .avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar.prince  { background: linear-gradient(135deg, #ffd54f, #ffb300); }
+  .avatar.wooyoung { background: linear-gradient(135deg, #7e57c2, #5c6bc0); }
+  .avatar.chef    { background: linear-gradient(135deg, #ef5350, #e53935); }
+  .avatar.travel  { background: linear-gradient(135deg, #26a69a, #00897b); }
+
+  .avatar-face {
+    font-size: 40px;
+    line-height: 1;
+  }
+
+  .card-name {
+    font-size: 16px; font-weight: 600; color: #1a1a1a;
+    margin-bottom: 6px;
+  }
+  .card-desc {
+    font-size: 12px; color: #999; line-height: 1.5;
+  }
+  .card-tag {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 11px; font-weight: 500;
+  }
+  .tag-fantasy   { background: #fff8e1; color: #f9a825; }
+  .tag-law       { background: #ede7f6; color: #7e57c2; }
+  .tag-food      { background: #fce4ec; color: #e53935; }
+  .tag-travel    { background: #e0f2f1; color: #00897b; }
+
+  /* Online dot */
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: #4caf50;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* Footer notice */
+  .footer-notice {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12px; color: #bbb;
+  }
+
+  @media (max-width: 480px) {
+    .card-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card { padding: 16px 12px; }
+    .avatar { width: 60px; height: 60px; }
+    .avatar-face { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>AI 대화방</h1>
+  <p>대화할 AI를 선택해주세요</p>
+</div>
+
+<div class="main">
+  <div class="section-title"><span class="status-dot"></span> 현재 대화 가능한 AI</div>
+  <div class="card-grid">
+
+    <div class="card" onclick="location.href='mockup-02-chat.html?ai=prince'">
+      <div class="avatar prince"><span class="avatar-face">&#x1F451;</span></div>
+      <div class="card-name">어린왕자</div>
+      <div class="card-desc">B612 소행성에서 온<br>순수한 영혼의 왕자</div>
+      <span class="card-tag tag-fantasy">판타지</span>
+    </div>
+
+    <div class="card" onclick="location.href='mockup-02-chat.html?ai=wooyoung'">
+      <div class="avatar wooyoung"><span class="avatar-face">&#x2696;</span></div>
+      <div class="card-name">우영우 변호사</div>
+      <div class="card-desc">고래를 사랑하는<br>천재 변호사</div>
+      <span class="card-tag tag-law">법률</span>
+    </div>
+
+    <div class="card" onclick="location.href='mockup-02-chat.html?ai=chef'">
+      <div class="avatar chef"><span class="avatar-face">&#x1F468;&#x200D;&#x1F373;</span></div>
+      <div class="card-name">백종원 셰프</div>
+      <div class="card-desc">누구나 따라할 수 있는<br>쉬운 요리 레시피</div>
+      <span class="card-tag tag-food">요리</span>
+    </div>
+
+    <div class="card" onclick="location.href='mockup-02-chat.html?ai=travel'">
+      <div class="avatar travel"><span class="avatar-face">&#x1F30F;</span></div>
+      <div class="card-name">여행 플래너</div>
+      <div class="card-desc">세계 곳곳의 숨은<br>명소를 안내해요</div>
+      <span class="card-tag tag-travel">여행</span>
+    </div>
+
+  </div>
+
+  <div class="footer-notice">
+    관리자가 등록한 AI 캐릭터만 표시됩니다
+  </div>
+</div>
+
+</body>
+</html>

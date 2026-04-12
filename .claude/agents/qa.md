@@ -58,24 +58,15 @@ model: haiku
   ```
 
 #### 메뉴 구조
-- [ ] 4개 메인 메뉴:
-  ```
-  ✓ 대시보드 (개요, 통계)
-  ✓ 사용자 관리 (사용자 목록, 권한 관리)
-  ✓ 리포트 (판매 리포트, 성능 분석)
-  ✓ 설정 (계정 설정, 보안 설정, 시스템 설정)
-  ```
+- [ ] BE API(`/api/admin/menus/tree`)에서 동적 메뉴 조회 — `docs/ui/page-menu-admin.md` 참조
+- [ ] MenuContext를 통해 메뉴 데이터 관리 (하드코딩 금지)
 
 ### 3️⃣ 상수 & 설정 검증
 
-#### menu.ts
-- [ ] 파일: `app/constants/menu.ts`
-- [ ] 구조:
-  ```typescript
-  ✓ export const MENU_ITEMS = [...]
-  ✓ label, icon, path 포함
-  ✓ children 배열로 서브메뉴
-  ```
+#### MenuContext (app/contexts/MenuContext.tsx)
+- [ ] BE API(`/api/admin/menus/tree`)에서 메뉴 데이터 조회
+- [ ] `menus`, `allowedUrls`, `loading`, `refreshMenus` 상태 관리
+- [ ] 하드코딩된 메뉴 배열이 없음 확인
 
 #### providers.tsx
 - [ ] 파일: `app/providers.tsx`
@@ -144,7 +135,7 @@ model: haiku
 
 #### 색상 가이드 (docs/ui/color.md)
 - [ ] 파일 존재
-- [ ] Primary, Secondary, Danger 색상 정의
+- [ ] 대규모 레이아웃 영역(헤더, 사이드바 등)에 중립 색상(흰/회/검) 사용 원칙 정의
 - [ ] 모든 컴포넌트가 가이드 색상 사용
 
 #### 타이포그래피 가이드 (docs/ui/typography.md)
@@ -726,6 +717,186 @@ model: haiku
   ✗ LEFT JOIN 없음 (API 응답에 profileImage가 항상 null)
   ✗ LIMIT 없음 (첨부파일이 여러 건일 때 행 중복)
   ```
+
+---
+
+## 📋 PART 4: 사용자 홈페이지 (AI 대화방) 목업 검증
+
+> 목업 파일과 구현된 페이지를 비교하여 레이아웃, 색상, 동작이 일치하는지 검증한다.
+> 목업 참조: `docs/ui/mockup/mockup-01-select.html`, `docs/ui/mockup/mockup-02-chat.html`
+
+### 1️⃣ 라우팅 검증
+
+- [ ] `/` 접근 시 AI 선택 화면 표시 (로그인 불필요)
+- [ ] `/chat/[name]` 접근 시 채팅 화면 표시 (로그인 불필요)
+- [ ] `[name]`은 영문 slug 사용 (예: `little-prince`, `wooyoungwoo`)
+- [ ] AI 선택 카드 클릭 → `/chat/[name]`으로 정상 이동
+- [ ] 채팅 화면 뒤로가기 → `/`로 정상 이동
+- [ ] middleware PUBLIC_PATHS에 `/`, `/chat` 경로 포함
+
+### 2️⃣ AI 선택 화면 (`/`) — mockup-01 대조
+
+#### 헤더
+- [ ] 타이틀 "AI 대화방" 표시
+- [ ] 설명 문구 "대화할 AI를 선택해주세요" 표시
+
+#### 카드 그리드
+- [ ] 카드 레이아웃: `grid`, `minmax(200px, 1fr)`, `gap: 16px`
+- [ ] 카드 배경: `#fff`, border-radius: `16px`
+- [ ] 카드 hover 시: `border-color: #4a90d9`, 그림자 확대, `translateY(-2px)`
+- [ ] 아바타: 원형, 이모지 + 그라데이션 배경
+- [ ] 카드 내용: AI 이름 + 설명 + 카테고리 태그
+- [ ] 모바일(480px 이하): 2열 그리드로 전환
+
+#### 데이터
+- [ ] AI 목록이 BE API에서 동적 조회됨 (하드코딩 아님)
+- [ ] 관리자가 등록한 AI만 표시됨
+
+### 3️⃣ 채팅 화면 (`/chat/[name]`) — mockup-02 대조
+
+#### 전체 레이아웃
+- [ ] 배경색: `#abc1d1` (카카오톡 스타일)
+- [ ] 전체 높이: 100vh, flex column 구조 (헤더 + 채팅 + 입력)
+
+#### 채팅 헤더
+- [ ] 뒤로가기 버튼 (`←`) → `/`로 이동
+- [ ] AI 아바타 (원형, 그라데이션)
+- [ ] AI 이름 + "AI 대화" 라벨
+
+#### 말풍선 스타일
+- [ ] AI 메시지: 좌측 정렬, 아바타 + 이름 표시
+- [ ] AI 말풍선: 배경 `#fff`, border-radius `16px`, 좌상단 `4px`
+- [ ] 사용자 메시지: 우측 정렬, 아바타/이름 없음
+- [ ] 사용자 말풍선: 배경 `#fef01b`, border-radius `16px`, 우상단 `4px`
+- [ ] 시간 표시: 말풍선 옆 하단, `10px`, 색상 `#666`
+- [ ] 날짜 구분선: 중앙 정렬, 둥근 배경
+
+#### 타이핑 인디케이터
+- [ ] AI 응답 대기 중 점 3개 애니메이션 표시
+- [ ] 점 크기 `6px`, 색상 `#999`, 순차 바운스 애니메이션
+
+#### 입력 영역
+- [ ] 하단 고정, 배경 `#fff`
+- [ ] 텍스트 입력 + 전송 버튼
+- [ ] 전송 버튼: 원형, 배경 `#fef01b`, hover 시 `#fee500`
+
+#### 반응형
+- [ ] 모바일(480px 이하): 말풍선 max-width `90%`
+- [ ] 데스크톱: 말풍선 max-width `85%`
+
+---
+
+## 📋 PART 5: AI 프롬프트 관리 검증
+
+### 1️⃣ 관리자 페이지 — AI 프롬프트 목록 (`/admin/content/ai-prompts`)
+
+#### 페이지 구조
+- [ ] 페이지 유형: `LIST` (`docs/ui/page-menu-admin.md` 섹션 10 참조)
+- [ ] MainLayout으로 래핑, breadcrumbs: 콘텐츠 > AI 프롬프트
+- [ ] 검색 영역: 제목(title) 입력 + 카테고리(categoryCode) 드롭다운 + 검색 버튼
+- [ ] 카테고리 드롭다운: `GET /api/common-codes/detail/page?codeGroup=ai_category` 로 동적 조회
+
+#### 테이블 컬럼
+- [ ] No (순번), 아바타, 제목, 소개(말줄임), 카테고리(code_name), 등록일
+- [ ] 아바타: 32×32 원형 썸네일, 이미지 없으면 제목 첫 글자 아바타 fallback
+- [ ] 행 클릭 → `/admin/content/ai-prompts/detail/{aiPromptContentsSeq}` 이동
+- [ ] 등록 버튼 → `/admin/content/ai-prompts/detail/new` 이동
+
+#### 페이징 리스트 UI 규칙 (`docs/ui/paging-list-ui-admin.md`)
+- [ ] Total 건수 좌측, 등록 버튼 우측
+- [ ] 기본 10건, 건수 변경 셀렉트박스
+- [ ] 번호 페이징 (5개씩), 이전/다음 버튼
+
+### 2️⃣ 관리자 페이지 — AI 프롬프트 상세 (`/admin/content/ai-prompts/detail/:id`)
+
+#### 페이지 구조
+- [ ] 페이지 유형: `DETAIL` (`docs/ui/page-menu-admin.md` 섹션 11 참조)
+- [ ] 모드: 조회 / 생성(`/detail/new`) / 수정
+- [ ] 아바타 이미지: 폼 최상단 배치 (회원 상세와 동일 패턴)
+
+#### 아바타 이미지 업로드
+- [ ] 조회 모드: 이미지만 표시, 업로드 버튼 숨김
+- [ ] 생성 모드: 아바타 이미지 영역 숨김
+- [ ] 수정 모드: 업로드 버튼 → 파일 선택 → `POST /api/file/upload` 즉시 업로드
+- [ ] 업로드 후 결과 이미지 즉시 반영 (저장 버튼과 독립)
+
+#### 폼 필드
+- [ ] 제목(`title`): 생성=입력, 수정=입력, 조회=읽기전용
+- [ ] 카테고리(`categoryCode`): 생성/수정=드롭다운, 조회=읽기전용(code_name 표시)
+- [ ] 소개(`intro`): 생성=입력, 수정=입력, 조회=읽기전용
+- [ ] 프롬프트 내용(`promptContent`): 생성/수정=textarea, 조회=읽기전용
+  - [ ] textarea 최소 10줄 높이
+  - [ ] 모노스페이스 폰트 적용
+
+#### 버튼
+- [ ] 조회 모드: 수정, 삭제, 목록
+- [ ] 생성 모드: 저장, 취소
+- [ ] 수정 모드: 저장, 취소
+
+### 3️⃣ 홈페이지(`/`) ↔ AI 프롬프트 데이터 매칭
+
+> 홈페이지 목업(`mockup-01-select.html`)의 AI 선택 카드가 DB의 `ai_prompt_contents` 데이터와 정확히 매칭되는지 검증
+
+#### 데이터 소스 매칭
+- [ ] AI 카드 목록이 `GET /api/ai-prompt-contents/list` (Public) 에서 동적 조회됨
+- [ ] 하드코딩된 AI 캐릭터 데이터가 **없음** (모두 DB에서 조회)
+- [ ] `is_deleted = 'N'`인 레코드만 표시됨
+
+#### 카드 ↔ 테이블 필드 매칭
+| 카드 UI 요소 | DB 필드 | 비고 |
+|-------------|---------|------|
+| AI 이름 | `title` | |
+| 설명 | `intro` | |
+| 카테고리 태그 | `categoryCode` → `code_name`으로 변환 표시 | |
+| 아바타 이미지 | 첨부파일 API | `target_table='ai_prompt_contents'` |
+| 카드 클릭 URL | `/chat/{aiPromptContentsSeq}` | PK 기반 slug |
+
+#### 이미지 fallback
+- [ ] 아바타 이미지 없을 때 → 제목 첫 글자 + 그라데이션 배경 fallback
+- [ ] `<img src="/api/file/content?...">` + `onerror` 핸들러
+
+### 4️⃣ 채팅 화면(`/chat/[id]`) ↔ LLM API 스트리밍 매칭
+
+#### 라우팅
+- [ ] `/chat/[id]`의 `id`는 `aiPromptContentsSeq` (PK 숫자)
+- [ ] 잘못된 id 접근 시 에러 처리 또는 `/`로 리다이렉트
+
+#### 스트리밍 연동
+- [ ] FE에서 LLM API(`http://localhost:9000`)로 **직접** 스트리밍 요청
+- [ ] BE(Spring Boot)를 거치지 않고 직접 통신
+- [ ] `NEXT_PUBLIC_LLM_API_URL` 환경변수 사용
+- [ ] 스트리밍 엔드포인트: `POST /api/chat/stream`
+- [ ] 요청 시 `aiPromptContentsSeq` (페르소나 ID) 전달
+- [ ] 응답: `StreamingResponse` (chunked text/plain)
+- [ ] FE에서 `fetch` + `ReadableStream`으로 토큰 단위 실시간 출력
+
+#### 채팅 UI ↔ 스트리밍 동작
+- [ ] AI 응답 수신 중 타이핑 인디케이터(점 3개) 표시
+- [ ] 토큰 수신할 때마다 말풍선에 텍스트 추가 (실시간)
+- [ ] 스트리밍 완료 후 타이핑 인디케이터 제거, 시간 표시
+- [ ] 사용자 메시지 전송 후 입력 필드 초기화
+
+### 5️⃣ LLM API 서버 검증
+
+#### 프로젝트 구조
+- [ ] `projs/llm-api/` 디렉토리 존재
+- [ ] `main.py` — FastAPI 앱 엔트리포인트
+- [ ] `requirements.txt` — 필수 패키지 포함 (fastapi, uvicorn, openai, anthropic, google-genai, httpx, python-dotenv)
+- [ ] `.env.example` — API 키 템플릿 존재
+
+#### API 키 검증
+- [ ] `.env`에 API 키 미설정 시 안내 메시지 출력 후 서버 종료
+- [ ] 최소 1개 이상 API 키 설정 시 정상 기동
+- [ ] 설정된 프로바이더만 사용 가능 (미설정 프로바이더 요청 시 에러 응답)
+
+#### CORS 설정
+- [ ] FE 포트(예: 3000)에서의 요청 허용
+- [ ] `allow_credentials=True`
+- [ ] `allow_methods=["*"]`, `allow_headers=["*"]`
+
+#### 페르소나 조회
+- [ ] LLM API가 BE API(`GET /api/ai-prompt-contents/{id}`)를 호출하여 system prompt 조회
+- [ ] DB에 직접 연결하지 않음
 
 ---
 

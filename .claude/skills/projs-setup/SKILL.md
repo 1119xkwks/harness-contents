@@ -1,6 +1,6 @@
 ---
 name: projs-setup
-description: 프런트 앤드 관리자 페이지를 자동으로 생성하고 화면 검증까지 수행
+description: FE, BE, LLM API 프로젝트를 자동으로 생성하고 검증까지 수행
 trigger: /projs-setup
 ---
 
@@ -16,10 +16,11 @@ trigger: /projs-setup
 
 | 에이전트 | 파일 | 역할 | 타입 |
 |---------|------|------|------|
-| 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트 정보 얻기 | general-purpose |
+| 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트, LLM 모델, Python 버전 정보 얻기 | general-purpose |
 | 관리자 FE 개발자 | `.claude/agents/frontend-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
 | 관리자 BE 개발자 | `.claude/agents/backend-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
-| QA 검증 | `.claude/agents/qa.md` | FE/BE 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
+| LLM API 개발자 | `.claude/agents/llm-api.md` | Python FastAPI LLM 스트리밍 채팅 API 서버 생성 | general-purpose |
+| QA 검증 | `.claude/agents/qa.md` | FE/BE/LLM API 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
 
 ## 팀 구성 및 실행
 
@@ -28,28 +29,55 @@ trigger: /projs-setup
 | 순서 | 작업 | 담당 | 의존 | 산출물 |
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1 | `projs/fe-next` 프론트앤드 코드 |
-| 2c | 관리자 백엔드 개발 | backend | 작업 1 | `projs/be-springboot` 백엔드 코드 |
-| 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2c | DB 테이블 생성 완료 |
+| 1.5 | 설정 반영 확인 | 오케스트레이터 | 작업 1 | 설정 파일 반영 완료 |
+| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1.5 | `projs/fe-next` 프론트앤드 코드 |
+| 2b | 관리자 백엔드 개발 | backend | 작업 1.5 | `projs/be-springboot` 백엔드 코드 |
+| 2c | LLM API 개발 | llm-api | 작업 1.5 | `projs/llm-api` Python FastAPI 코드 |
+| 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2b, 2c | DB 테이블 생성 완료 |
 | 4 | QA 검증 & 테스트 | qa | 작업 3 | `reports/qa.md`, 테스트 코드 |
 
-작업 2a(관리자 프론트엔드 개발), 2c( 관리자 백엔드 개발)는 **병렬 실행**한다. 모두 작업 1(사전 인터뷰)에만 의존한다.
+### 작업 1.5: 설정 반영 확인 (개발 착수 전 필수 게이트)
+
+pre-interview 완료 후, `reports/01-pre-interview.md`를 읽고 아래 항목이 개발 에이전트에게 전달할 정보에 빠짐없이 반영되었는지 확인한다.
+
+| 확인 항목 | 반영 대상 | pre-interview 소스 |
+|-----------|----------|-------------------|
+| DB 접속 정보 | BE `application.yml` (`spring.datasource.*`) | DB 정보 섹션 |
+| BE 포트 | BE `application.yml` (`server.port`) | 포트 정보 섹션 |
+| FE 포트 | FE 실행 명령 (`--port`) | 포트 정보 섹션 |
+| LLM API 포트 | LLM API 실행 (`--port`) | 포트 정보 섹션 |
+| BE API URL | FE `.env.local` (`NEXT_PUBLIC_API_URL`) | BE 포트 기반 |
+| LLM API URL | FE `.env.local` (`NEXT_PUBLIC_LLM_API_URL`) | LLM API 포트 기반 |
+| CORS 허용 origin (BE) | BE `SecurityConfig` 또는 `WebMvcConfig` | FE 포트 기반 |
+| CORS 허용 origin (LLM API) | LLM API `main.py` CORS 설정 | FE 포트 기반 |
+| 첨부파일 경로 | BE `application.yml` (`app.file.root-directory`) | 첨부파일 저장 경로 섹션 |
+| LLM API 키 | `projs/llm-api/.env` | LLM 모델 정보 섹션 |
+| LLM 사용 모델명 | `projs/llm-api/.env` | LLM 모델 정보 섹션 |
+| Node/JDK/Python 설치 여부 | 미설치 시 사용자에게 안내 후 중단 | 시스템 환경 정보 섹션 |
+
+- 사용자가 "수동 설정"을 선택한 항목은 건드리지 않고, 해당 사실을 개발 에이전트에게 전달한다
+- 모든 항목 확인 후 작업 2a, 2c로 진행한다
+
+작업 2a(관리자 프론트엔드 개발), 2b(관리자 백엔드 개발), 2c(LLM API 개발)는 **병렬 실행**한다. 모두 작업 1.5(설정 반영 확인)에 의존한다.
 
 ### 작업 3: 사용자 확인 (QA 전 필수 게이트)
 
 코드 생성이 완료되면 QA 실행 **전에** 사용자에게 다음을 확인받는다:
 
 1. **`application.yml` DB 접속 정보 확인** — 사전 인터뷰에서 받은 정보가 올바르게 설정되었는지 확인 요청
-2. **`docs/db/create-tables.sql` 직접 실행 요청** — 사용자가 DB 클라이언트(pgAdmin, DBeaver 등)에서 직접 DDL을 실행
-3. **테이블 생성 완료 확인** — 사용자가 "완료" 응답할 때까지 대기
+2. **`projs/llm-api/.env` API 키 설정 확인** — 사용자가 직접 API 키를 입력했는지 확인 요청
+3. **`docs/db/create-tables.sql` 직접 실행 요청** — 사용자가 DB 클라이언트(pgAdmin, DBeaver 등)에서 직접 DDL을 실행
+4. **테이블 생성 완료 확인** — 사용자가 "완료" 응답할 때까지 대기
 
 > **⚠ 금지: `create-tables.sql`을 에이전트가 직접 실행하지 않는다.** DB 스키마 변경은 반드시 사용자가 수동으로 수행한다.
 
 사용자 확인이 완료된 후 작업 4(QA)를 진행한다.
 
 **팀원 간 소통 흐름:**
-- 사전 인터뷰 완료 → frontend에게 컴포넌트 구조·라우팅 전달, backend에게 API·DB·인증 전달, qa에게 기능 요구사항 전달
+- 사전 인터뷰 완료 → frontend에게 컴포넌트 구조·라우팅 전달, backend에게 API·DB·인증 전달, llm-api에게 LLM 모델·포트·BE API URL 전달, qa에게 기능 요구사항 전달
 - frontend ↔ backend: API 연동 중 실시간 소통 (엔드포인트 변경, 에러 형식 등)
+- frontend ↔ llm-api: 스트리밍 채팅 연동 (엔드포인트, 요청/응답 형식)
+- llm-api → backend: 페르소나(system prompt) 조회 API 연동
 
 ## 자동 검증 프로세스
 
