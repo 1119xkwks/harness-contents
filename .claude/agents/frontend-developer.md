@@ -399,15 +399,15 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 | 사용자 말풍선 | `#fef01b` | 노란색 |
 | AI 말풍선 | `#ffffff` | 흰색 |
 | 말풍선 radius | `16px` | 꼬리 쪽 `4px` |
-| 아바타 | 이모지 + 그라데이션 배경 | 원형, 캐릭터별 색상 |
+| 아바타 | `avatarEmoji` + `avatarColor` (DB 필드) | 원형, 이모지 중앙 + 그라데이션 배경 |
 | 카드 hover | `border-color: #4a90d9` | 파란색 테두리 |
 
 ### AI 선택 화면 (`/`) 구성
 
 - 상단 헤더: 타이틀 "AI 대화방" + 설명 "대화할 AI를 선택해주세요"
-- 카드 그리드: AI 캐릭터별 아바타 + 이름 + 설명 + 태그
-- 카드 클릭 → `/chat/[name]`으로 이동
-- AI 목록은 BE API에서 조회 (관리자가 등록한 시스템 프롬프트 기반)
+- 카드 그리드: AI 캐릭터별 아바타(`avatarEmoji` + `avatarColor`) + 이름(`title`) + 설명(`intro`) + 태그(`categoryName`)
+- 카드 클릭 → `/chat/[id]`으로 이동 (`aiPromptContentsSeq`)
+- AI 목록은 BE API(`GET /api/ai-prompt-contents/list`)에서 조회 (관리자가 등록한 시스템 프롬프트 기반)
 
 ### 채팅 화면 (`/chat/[name]`) 구성
 

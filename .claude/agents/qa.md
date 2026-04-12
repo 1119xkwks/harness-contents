@@ -672,7 +672,7 @@ allowedTools:
 
 ### 6️⃣ 엔티티-첨부파일 연동 구조 검증
 
-> 다른 Feature의 DTO에서 첨부파일(프로필 이미지 등)을 포함하여 응답할 때의 구현 패턴을 검증한다.
+> 다른 Feature의 DTO에서 첨부파일(회원 프로필 이미지 등)을 포함하여 응답할 때의 구현 패턴을 검증한다. (AI 프롬프트는 이모지+색상 방식이므로 해당 없음)
 
 #### DTO — 내부 클래스로 첨부파일 정보 포함
 - [ ] 첨부파일이 필요한 DTO에 `ProfileImage` 등 내부 static 클래스가 정의됨
@@ -752,8 +752,8 @@ allowedTools:
 - [ ] 카드 레이아웃: `grid`, `minmax(200px, 1fr)`, `gap: 16px`
 - [ ] 카드 배경: `#fff`, border-radius: `16px`
 - [ ] 카드 hover 시: `border-color: #4a90d9`, 그림자 확대, `translateY(-2px)`
-- [ ] 아바타: 원형, 이모지 + 그라데이션 배경
-- [ ] 카드 내용: AI 이름 + 설명 + 카테고리 태그
+- [ ] 아바타: 원형, `avatarEmoji` 중앙 표시 + `avatarColor` 배경 (DB 필드 기반)
+- [ ] 카드 내용: AI 이름(`title`) + 설명(`intro`) + 카테고리 태그(`categoryName`)
 - [ ] 모바일(480px 이하): 2열 그리드로 전환
 
 #### 데이터
@@ -768,7 +768,7 @@ allowedTools:
 
 #### 채팅 헤더
 - [ ] 뒤로가기 버튼 (`←`) → `/`로 이동
-- [ ] AI 아바타 (원형, 그라데이션)
+- [ ] AI 아바타 (원형, `avatarEmoji` + `avatarColor` 배경)
 - [ ] AI 이름 + "AI 대화" 라벨
 
 #### 말풍선 스타일
@@ -806,7 +806,7 @@ allowedTools:
 
 #### 테이블 컬럼
 - [ ] No (순번), 아바타, 제목, 소개(말줄임), 카테고리(code_name), 등록일
-- [ ] 아바타: 32×32 원형 썸네일, 이미지 없으면 제목 첫 글자 아바타 fallback
+- [ ] 아바타: 32×32 원형, `avatarColor` 배경 + `avatarEmoji` 중앙 표시
 - [ ] 행 클릭 → `/admin/content/ai-prompts/detail/{aiPromptContentsSeq}` 이동
 - [ ] 등록 버튼 → `/admin/content/ai-prompts/detail/new` 이동
 
@@ -820,13 +820,12 @@ allowedTools:
 #### 페이지 구조
 - [ ] 페이지 유형: `DETAIL` (`docs/ui/page-menu-admin.md` 섹션 11 참조)
 - [ ] 모드: 조회 / 생성(`/detail/new`) / 수정
-- [ ] 아바타 이미지: 폼 최상단 배치 (회원 상세와 동일 패턴)
+- [ ] 아바타 미리보기: 폼 최상단 배치 (이모지 + 그라데이션 원형)
 
-#### 아바타 이미지 업로드
-- [ ] 조회 모드: 이미지만 표시, 업로드 버튼 숨김
-- [ ] 생성 모드: 아바타 이미지 영역 숨김
-- [ ] 수정 모드: 업로드 버튼 → 파일 선택 → `POST /api/file/upload` 즉시 업로드
-- [ ] 업로드 후 결과 이미지 즉시 반영 (저장 버튼과 독립)
+#### 아바타 입력 (이모지 + 색상)
+- [ ] 조회 모드: 아바타 미리보기만 표시 (입력 필드 읽기전용)
+- [ ] 생성/수정 모드: `avatarEmoji` 입력 + `avatarColor` 입력 → 실시간 미리보기 갱신
+- [ ] 이미지 업로드 방식이 아닌 텍스트 입력 방식 확인
 
 #### 폼 필드
 - [ ] 제목(`title`): 생성=입력, 수정=입력, 조회=읽기전용
@@ -856,12 +855,13 @@ allowedTools:
 | AI 이름 | `title` | |
 | 설명 | `intro` | |
 | 카테고리 태그 | `categoryCode` → `code_name`으로 변환 표시 | |
-| 아바타 이미지 | 첨부파일 API | `target_table='ai_prompt_contents'` |
+| 아바타 이모지 | `avatarEmoji` | 원형 중앙 표시 |
+| 아바타 배경 | `avatarColor` | CSS gradient 배경 |
 | 카드 클릭 URL | `/chat/{aiPromptContentsSeq}` | PK 기반 slug |
 
-#### 이미지 fallback
-- [ ] 아바타 이미지 없을 때 → 제목 첫 글자 + 그라데이션 배경 fallback
-- [ ] `<img src="/api/file/content?...">` + `onerror` 핸들러
+#### 아바타 렌더링
+- [ ] 아바타: `avatarColor`를 `background` 스타일로, `avatarEmoji`를 원형 중앙에 표시
+- [ ] 첨부파일 API를 사용하지 않음 (이미지 업로드 방식 아님)
 
 ### 4️⃣ 채팅 화면(`/chat/[id]`) ↔ LLM API 스트리밍 매칭
 

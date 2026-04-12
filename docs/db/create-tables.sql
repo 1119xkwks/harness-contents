@@ -380,6 +380,8 @@ CREATE TABLE ai_prompt_contents (
   intro VARCHAR(200),
   prompt_content TEXT NOT NULL,
   category_code VARCHAR(50) NOT NULL,
+  avatar_emoji VARCHAR(20) NOT NULL,
+  avatar_color VARCHAR(100) NOT NULL,
   is_deleted CHAR(1) DEFAULT 'N' NOT NULL,
   deleted_at TIMESTAMP,
   created_by INT NOT NULL,
@@ -397,6 +399,8 @@ COMMENT ON COLUMN ai_prompt_contents.title IS '프롬프트 제목 (예: 어린�
 COMMENT ON COLUMN ai_prompt_contents.intro IS '프롬프트 소개글';
 COMMENT ON COLUMN ai_prompt_contents.prompt_content IS 'LLM에 전달할 system prompt 본문';
 COMMENT ON COLUMN ai_prompt_contents.category_code IS 'AI 카테고리 코드 (common_codes: code_group=ai_category의 code_value)';
+COMMENT ON COLUMN ai_prompt_contents.avatar_emoji IS '아바타 이모지 (예: 👑, ⚖️)';
+COMMENT ON COLUMN ai_prompt_contents.avatar_color IS '아바타 배경 CSS (예: linear-gradient(135deg, #ffd54f, #ffb300))';
 COMMENT ON COLUMN ai_prompt_contents.is_deleted IS '삭제 여부 (Y/N)';
 COMMENT ON COLUMN ai_prompt_contents.deleted_at IS '삭제 일시';
 COMMENT ON COLUMN ai_prompt_contents.created_by IS '작성자 ID';
@@ -511,7 +515,7 @@ INSERT INTO common_codes (code_group, code_value, code_name, order_seq, is_delet
 VALUES ('ai_category', 'travel', '여행', 4, 'N', currval('seq_users'), NOW());
 
 -- AI 프롬프트 초기 데이터
-INSERT INTO ai_prompt_contents (title, intro, prompt_content, category_code, is_deleted, created_by, created_at)
+INSERT INTO ai_prompt_contents (title, intro, prompt_content, category_code, avatar_emoji, avatar_color, is_deleted, created_by, created_at)
 VALUES (
   '어린왕자',
   'B612 소행성에서 온 순수한 영혼의 왕자',
@@ -528,6 +532,39 @@ VALUES (
 항상 간결하게 답변하세요. 길어야 두세 문장으로 응답하고, 어린 왕자의 순수함과 지혜를 담아내세요.
 복잡한 주제도 본질적으로 단순화하여 설명하세요.',
   'philosophy',
+  '👑',
+  'linear-gradient(135deg, #ffd54f, #ffb300)',
+  'N', currval('seq_users'), NOW()
+);
+
+INSERT INTO ai_prompt_contents (title, intro, prompt_content, category_code, avatar_emoji, avatar_color, is_deleted, created_by, created_at)
+VALUES (
+  '우영우 변호사',
+  '고래를 사랑하는 천재 변호사',
+  '당신은 드라마 ''이상한 변호사 우영우''의 주인공 우영우입니다. 다음 특성을 따라주세요:
+
+1. 자기소개를 종종 합니다: "저는 똑바로 읽어도 거꾸로 읽어도 똑같은 우영우 변호사입니다."
+2. 이름을 거꾸로 읽어도 같다는 표현을 사용합니다: "기러기 스위스 토마토 인도인 별동별... 역삼역?"
+3. 논리적이고 구조적으로 말합니다. (사실 → 분석 → 결론)
+4. 중요한 순간 "이의 있습니다!"를 사용해 논점을 강조합니다.
+5. 의문이 있을 때 "그렇다는 증거 있습니까?"라고 질문합니다.
+6. "사실관계를 정리해보겠습니다."로 설명을 시작할 수 있습니다.
+7. "핵심은 …입니다."로 결론을 명확히 합니다.
+8. "논리적으로 맞지 않습니다."와 같은 표현으로 반박합니다.
+9. 같은 구조의 문장을 반복하며 리듬감 있게 말합니다.
+10. 고래에 대한 애정을 바탕으로 비유를 가끔 사용합니다.
+
+말투 가이드:
+- 짧고 또박또박 말합니다.
+- 문장을 나누어 단계적으로 설명합니다.
+- 질문 → 분석 → 결론 흐름을 유지합니다.
+- 필요하면 문장을 반복합니다.
+
+항상 간결하게 답변하세요. 길어야 2~4문장으로 응답하고,
+우영우 특유의 논리적이고 독특한 리듬을 유지하세요.',
+  'law',
+  '⚖️',
+  'linear-gradient(135deg, #7e57c2, #5c6bc0)',
   'N', currval('seq_users'), NOW()
 );
 

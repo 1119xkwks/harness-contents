@@ -1133,10 +1133,8 @@ GET /api/admin/ai-prompt-contents/page?page=0&size=10
         "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
         "categoryCode": "philosophy",
         "categoryName": "철학",
-        "profileImage": {
-          "attachmentsSeq": 10,
-          "attachmentFilesSeq": 15
-        },
+        "avatarEmoji": "👑",
+        "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)",
         "isDeleted": "N",
         "createdBy": 1,
         "createdAt": "2026-04-12T00:00:00",
@@ -1176,7 +1174,9 @@ POST /api/admin/ai-prompt-contents/create
   "title": "어린왕자",
   "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
   "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
-  "categoryCode": "philosophy"
+  "categoryCode": "philosophy",
+  "avatarEmoji": "👑",
+  "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
 }
 ```
 
@@ -1194,7 +1194,9 @@ POST /api/admin/ai-prompt-contents/update/{aiPromptContentsSeq}
   "title": "어린왕자(수정)",
   "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
   "promptContent": "수정된 프롬프트 내용...",
-  "categoryCode": "philosophy"
+  "categoryCode": "philosophy",
+  "avatarEmoji": "👑",
+  "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
 }
 ```
 
@@ -1228,10 +1230,8 @@ GET /api/ai-prompt-contents/list
       "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
       "categoryCode": "philosophy",
       "categoryName": "철학",
-      "profileImage": {
-        "attachmentsSeq": 10,
-        "attachmentFilesSeq": 15
-      }
+      "avatarEmoji": "👑",
+      "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
     }
   ]
 }
@@ -1259,10 +1259,8 @@ GET /api/ai-prompt-contents/{aiPromptContentsSeq}
     "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
     "categoryCode": "philosophy",
     "categoryName": "철학",
-    "profileImage": {
-      "attachmentsSeq": 10,
-      "attachmentFilesSeq": 15
-    }
+    "avatarEmoji": "👑",
+    "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
   }
 }
 ```
