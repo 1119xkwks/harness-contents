@@ -32,6 +32,10 @@ AI 캐릭터와 대화할 수 있는 챗봇 게시판 프로젝트입니다.
   <img src="docs/ui/capture/admin_ai_prompt_게시판.png" alt="AI 프롬프트 게시판" width="700" />
 </p>
 
+홈 화면에서 `/admin` 경로로 이동하면 관리자 페이지에 접속할 수 있습니다.
+
+> **관리자 계정:** `admin` / `admin1234`
+
 관리자 페이지에서 AI 캐릭터의 **제목, 소개글, System Prompt, 카테고리, 아바타**를 등록하고 수정할 수 있습니다.
 
 등록된 System Prompt는 LLM 호출 시 `instructions`로 전달되어 **챗봇의 말투와 성격**을 결정합니다. 사용자가 홈 화면에서 챗봇 항목을 선택하면, 해당 캐릭터에 등록된 System Prompt가 자동으로 적용되어 그 캐릭터만의 고유한 말투로 대화가 진행됩니다.
