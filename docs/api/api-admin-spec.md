@@ -523,6 +523,40 @@ POST /api/common-codes/detail/delete/{commonCodesSeq}
 
 **Response** `ApiResponse<Void>`
 
+### 4-7. 공통코드 캐싱 조회 (Public - FE 캐싱 전용)
+
+```
+GET /api/common-codes/cache/{codeGroup}
+```
+
+> **인증 불필요** (Public). FE에서 공통코드를 캐싱하기 위한 전용 엔드포인트.
+> SecurityConfig에서 **permitAll** 처리 필수.
+> 상세 규칙: **[공통코드 FE 캐싱 규칙](../ui/common-code-cache.md)** 참조
+
+**Path Parameters**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| codeGroup | String | Y | 그룹코드의 `code_value` (예: `ai_category`) |
+
+**Response** `ApiResponse<List<CodeItem>>`
+```json
+{
+  "status": "success",
+  "data": [
+    { "codeValue": "philosophy", "codeName": "철학" },
+    { "codeValue": "law", "codeName": "법률" },
+    { "codeValue": "cooking", "codeName": "요리" },
+    { "codeValue": "travel", "codeName": "여행" }
+  ]
+}
+```
+
+> - 그룹코드 자신 제외 (`code_group = code_value`인 행 제외)
+> - `is_deleted = 'N'`인 것만 반환
+> - `order_seq` 오름차순 정렬
+> - 페이징 없음 (전체 반환)
+
 ---
 
 ## 5. 메뉴 관리 (Admin Menus)
@@ -1132,11 +1166,8 @@ GET /api/admin/ai-prompt-contents/page?page=0&size=10
         "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
         "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
         "categoryCode": "philosophy",
-        "categoryName": "철학",
-        "profileImage": {
-          "attachmentsSeq": 10,
-          "attachmentFilesSeq": 15
-        },
+        "avatarEmoji": "👑",
+        "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)",
         "isDeleted": "N",
         "createdBy": 1,
         "createdAt": "2026-04-12T00:00:00",
@@ -1154,7 +1185,7 @@ GET /api/admin/ai-prompt-contents/page?page=0&size=10
 }
 ```
 
-> `categoryName`은 `common_codes`에서 `code_group='ai_category'`, `code_value=categoryCode`의 `code_name`을 조회하여 반환
+> `categoryName`은 BE에서 반환하지 않음. FE에서 공통코드 캐싱(`GET /api/common-codes/cache/ai_category`)으로 `categoryCode` → 코드명 변환 — **[공통코드 FE 캐싱 규칙](../ui/common-code-cache.md) 참조**
 
 ### 10-2. [관리자] 상세 조회
 
@@ -1176,7 +1207,9 @@ POST /api/admin/ai-prompt-contents/create
   "title": "어린왕자",
   "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
   "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
-  "categoryCode": "philosophy"
+  "categoryCode": "philosophy",
+  "avatarEmoji": "👑",
+  "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
 }
 ```
 
@@ -1194,7 +1227,9 @@ POST /api/admin/ai-prompt-contents/update/{aiPromptContentsSeq}
   "title": "어린왕자(수정)",
   "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
   "promptContent": "수정된 프롬프트 내용...",
-  "categoryCode": "philosophy"
+  "categoryCode": "philosophy",
+  "avatarEmoji": "👑",
+  "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
 }
 ```
 
@@ -1227,11 +1262,8 @@ GET /api/ai-prompt-contents/list
       "title": "어린왕자",
       "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
       "categoryCode": "philosophy",
-      "categoryName": "철학",
-      "profileImage": {
-        "attachmentsSeq": 10,
-        "attachmentFilesSeq": 15
-      }
+      "avatarEmoji": "👑",
+      "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
     }
   ]
 }
@@ -1258,11 +1290,8 @@ GET /api/ai-prompt-contents/{aiPromptContentsSeq}
     "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
     "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
     "categoryCode": "philosophy",
-    "categoryName": "철학",
-    "profileImage": {
-      "attachmentsSeq": 10,
-      "attachmentFilesSeq": 15
-    }
+    "avatarEmoji": "👑",
+    "avatarColor": "linear-gradient(135deg, #ffd54f, #ffb300)"
   }
 }
 ```
@@ -1395,6 +1424,8 @@ while (true) {
 | 16 | POST | `/api/common-codes/detail/create` | 세부코드 생성 |
 | 17 | POST | `/api/common-codes/detail/update/{commonCodesSeq}` | 세부코드 수정 |
 | 18 | POST | `/api/common-codes/detail/delete/{commonCodesSeq}` | 세부코드 삭제 |
+| **Common Codes - Cache (Public)** |
+| 18-1 | GET | `/api/common-codes/cache/{codeGroup}` | 공통코드 캐싱 조회 (Public, FE 캐싱 전용) |
 | **Admin Menus** |
 | 19 | GET | `/api/admin/menus/tree` | 메뉴 트리 (사이드바) |
 | 20 | GET | `/api/admin/menus/page` | 메뉴 목록 |

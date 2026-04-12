@@ -1,14 +1,22 @@
 ---
 name: frontend-developer
-description: "관리자 프런트엔드 코드 개발자입니다."
-model: sonnet
+description: "프런트엔드 코드 개발자입니다."
+model: opus
+permissionMode: bypassPermissions
 color: cyan
+allowedTools:
+  - Bash
+  - Write
+  - Edit
+  - Read
+  - Glob
+  - Grep
 ---
 
-# Admin FE Developer Agent
+# FE Developer Agent
 
 ## 역할
-관리자 FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전히 생성 및 구현합니다.
+FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전히 생성 및 구현합니다.
 
 ## 책임
 
@@ -18,7 +26,7 @@ color: cyan
 
 ### 프로젝트 구조 검증
 - Next.js 14+ 프로젝트 구조 확인 (projs/fe-next)
-- 필수 패키지 설치 여부 확인 (React, Next.js, MUI, @emotion/react, @emotion/styled)
+- 필수 패키지 설치 여부 확인 (React, Next.js, @mui/material, @emotion/react, @emotion/styled)
 - package.json 및 tsconfig.json 존재 여부 확인
 
 ### 파일 생성
@@ -38,14 +46,12 @@ color: cyan
 
 #### 레이아웃 & 설정 (app/)
 - **providers.tsx**
-  - MUI ThemeProvider 설정
-  - 색상 팔레트 정의
-  - 타이포그래피 설정
+  - AuthProvider, MenuProvider 등 Context 래핑
+  - 전역 상태 관리 설정
 
 - **globals.css**
-  - 글로벌 스타일
-  - Sidebar, AppBar, Breadcrumbs, 통계 카드 스타일
-  - 모바일 반응형 스타일
+  - 기본 body 스타일, 스크롤바 등 글로벌 스타일만 포함
+  - MUI ThemeProvider로 처리할 수 없는 최소한의 전역 스타일
 
 - **layout.tsx**
   - 루트 레이아웃 설정
@@ -60,7 +66,7 @@ color: cyan
     - 총 회원수 (`GET /api/users/page?size=1` → `totalElements`)
     - 최근 가입자 수 (최근 7일 기준)
     - 메뉴 수 (`GET /api/admin/menus/page?size=1` → `totalElements`)
-  - CSS 모듈 스타일링
+  - MUI 컴포넌트 스타일링
 
 ### 1. 페이지 구조 생성
 - 새로운 페이지 파일 생성
@@ -88,9 +94,8 @@ color: cyan
 ### 기술 스택
 - React 18+
 - Next.js 14+
-- MUI 5+ (Material-UI)
-- Emotion (@emotion/react, @emotion/styled)
-- CSS Modules
+- MUI (Material UI) 5+ (@mui/material, @mui/icons-material, @emotion/react, @emotion/styled)
+- Tailwind CSS 사용 금지
 
 ### 완료 조건
 - ✅ 모든 파일 생성 완료
@@ -155,7 +160,7 @@ interface MenuContextType {
 ### Sidebar 변경
 
 - MenuContext에서 메뉴 데이터를 가져와서 렌더링
-- `menuIcon` 필드를 MUI 아이콘으로 매핑
+- `menuIcon` 필드를 아이콘으로 매핑 (SVG 또는 아이콘 라이브러리)
 - 로딩 중이면 Skeleton 표시
 - 메뉴가 비어있으면 안내 메시지 표시
 
@@ -227,6 +232,46 @@ ThemeProvider
        └─ MenuProvider
             └─ children
 ```
+
+---
+
+## 공통코드 FE 캐싱 ★핵심★
+
+> **공통코드 관리 페이지(`/admin/system/codes`)를 제외한 모든 페이지**에서 공통코드는 FE 캐싱 방식을 사용한다.
+> 상세 규칙: **`docs/ui/common-code-cache.md`** 참조
+
+### 금지 사항
+
+- BE API 응답의 `categoryName` 등 코드명 필드에 의존 금지 (BE는 `categoryCode` 등 코드값만 반환)
+- 공통코드 표시를 위해 BE에서 `common_codes` JOIN 하지 않음
+
+### `useCommonCodes` 커스텀 훅 (`app/hooks/useCommonCodes.ts`)
+
+```typescript
+interface CodeItem {
+  codeValue: string;
+  codeName: string;
+}
+
+function useCommonCodes(...codeGroups: string[]): {
+  codes: Record<string, CodeItem[]>;
+  getCodeName: (codeGroup: string, codeValue: string) => string;
+  loading: boolean;
+}
+```
+
+- `GET /api/common-codes/cache/{codeGroup}` (Public) 호출하여 캐싱
+- `codes['ai_category']` → Select 옵션 구성
+- `getCodeName('ai_category', 'philosophy')` → `'철학'` 반환
+
+### 사용 패턴
+
+| 위치 | 사용 방법 |
+|------|----------|
+| 리스트 검색 Select | `codes[codeGroup]`으로 드롭다운 옵션 구성 |
+| 리스트 테이블 컬럼 | `getCodeName(codeGroup, row.categoryCode)`로 코드명 표시 |
+| 상세/등록/수정 폼 Select | `codes[codeGroup]`으로 드롭다운 옵션 구성 |
+| 조회 모드 텍스트 | `getCodeName(codeGroup, data.categoryCode)`로 읽기전용 표시 |
 
 ---
 
@@ -343,7 +388,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 
 ### 구성
 
-- 중앙 정렬 카드 (MUI Card)
+- 중앙 정렬 카드 (MUI Card / Box 컴포넌트)
 - 입력: ID, PW
 - 로그인 버튼
 - 성공 → Cookie에 토큰 저장 → `redirect` 파라미터 경로 또는 `/admin`로 이동
@@ -371,7 +416,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 - **AI 선택 화면**: `docs/ui/mockup/mockup-01-select.html`
 - **채팅 화면**: `docs/ui/mockup/mockup-02-chat.html`
 
-목업 HTML을 브라우저에서 열어 레이아웃, 색상, 간격을 확인한 뒤 동일하게 구현한다.
+목업 HTML을 브라우저에서 열어 **화면 모양(레이아웃, 색상, 간격)만 참고**한다. 목업의 CSS 코드를 그대로 사용하지 않고, **MUI 컴포넌트와 sx prop으로 동일한 디자인을 구현**한다.
 
 ### 라우팅
 
@@ -391,15 +436,15 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 | 사용자 말풍선 | `#fef01b` | 노란색 |
 | AI 말풍선 | `#ffffff` | 흰색 |
 | 말풍선 radius | `16px` | 꼬리 쪽 `4px` |
-| 아바타 | 이모지 + 그라데이션 배경 | 원형, 캐릭터별 색상 |
+| 아바타 | `avatarEmoji` + `avatarColor` (DB 필드) | 원형, 이모지 중앙 + 그라데이션 배경 |
 | 카드 hover | `border-color: #4a90d9` | 파란색 테두리 |
 
 ### AI 선택 화면 (`/`) 구성
 
 - 상단 헤더: 타이틀 "AI 대화방" + 설명 "대화할 AI를 선택해주세요"
-- 카드 그리드: AI 캐릭터별 아바타 + 이름 + 설명 + 태그
-- 카드 클릭 → `/chat/[name]`으로 이동
-- AI 목록은 BE API에서 조회 (관리자가 등록한 시스템 프롬프트 기반)
+- 카드 그리드: AI 캐릭터별 아바타(`avatarEmoji` + `avatarColor`) + 이름(`title`) + 설명(`intro`) + 태그(`categoryName`)
+- 카드 클릭 → `/chat/[id]`으로 이동 (`aiPromptContentsSeq`)
+- AI 목록은 BE API(`GET /api/ai-prompt-contents/list`)에서 조회 (관리자가 등록한 시스템 프롬프트 기반)
 
 ### 채팅 화면 (`/chat/[name]`) 구성
 
@@ -420,14 +465,14 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 ## 호출 프롬프트
 
 ```
-다음 규칙을 따라 관리자 FE 페이지를 완성해줘:
+다음 규칙을 따라 FE 페이지를 완성해줘:
 
 **프로젝트 위치**: projs/fe-next (Next.js 14+)
 
 **생성할 파일** (위의 "파일 생성" 섹션 참조):
 - 컴포넌트: Sidebar.tsx, MainLayout.tsx
-- 레이아웃: providers.tsx, globals.css, layout.tsx
-- 페이지: page.tsx (+ CSS 모듈)
+- 설정: providers.tsx, globals.css, layout.tsx
+- 페이지: page.tsx
 - 문서: docs/ui/color.md, typography.md, layout.md
 
 **반드시 준수할 가이드라인**:

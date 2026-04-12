@@ -4,7 +4,7 @@ description: FE, BE, LLM API 프로젝트를 자동으로 생성하고 검증까
 trigger: /projs-setup
 ---
 
-# 관리자 FE 페이지 Setup & Validation
+# ChatBot 게시판 FE 페이지 Setup & Validation
 
 웹앱의 요구사항→설계→프론트엔드→백엔드→테스트를 에이전트 팀이 협업하여 개발한다.
 
@@ -16,11 +16,11 @@ trigger: /projs-setup
 
 | 에이전트 | 파일 | 역할 | 타입 |
 |---------|------|------|------|
-| 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트, LLM 모델, Python 버전 정보 얻기 | general-purpose |
-| 관리자 FE 개발자 | `.claude/agents/frontend-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
-| 관리자 BE 개발자 | `.claude/agents/backend-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
-| LLM API 개발자 | `.claude/agents/llm-api.md` | Python FastAPI LLM 스트리밍 채팅 API 서버 생성 | general-purpose |
-| QA 검증 | `.claude/agents/qa.md` | FE/BE/LLM API 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
+| 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트, LLM 모델, Python 버전 정보 얻기 | pre-interview |
+| FE 개발자 | `.claude/agents/frontend-developer.md` | FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | frontend-developer |
+| BE 개발자 | `.claude/agents/backend-developer.md` | BE 프로젝트 생성, MyBatis로 DB 연결 | backend-developer |
+| LLM API 개발자 | `.claude/agents/llm-api.md` | Python FastAPI LLM 스트리밍 채팅 API 서버 생성 | llm-api |
+| QA 검증 | `.claude/agents/qa.md` | FE/BE/LLM API 코드 품질 및 컨벤션 규칙 검증 | qa |
 
 ## 팀 구성 및 실행
 
@@ -30,8 +30,8 @@ trigger: /projs-setup
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
 | 1.5 | 설정 반영 확인 | 오케스트레이터 | 작업 1 | 설정 파일 반영 완료 |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1.5 | `projs/fe-next` 프론트앤드 코드 |
-| 2b | 관리자 백엔드 개발 | backend | 작업 1.5 | `projs/be-springboot` 백엔드 코드 |
+| 2a | 프론트엔드 개발 | frontend | 작업 1.5 | `projs/fe-next` 프론트앤드 코드 |
+| 2b | 백엔드 개발 | backend | 작업 1.5 | `projs/be-springboot` 백엔드 코드 |
 | 2c | LLM API 개발 | llm-api | 작업 1.5 | `projs/llm-api` Python FastAPI 코드 |
 | 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2b, 2c | DB 테이블 생성 완료 |
 | 4 | QA 검증 & 테스트 | qa | 작업 3 | `reports/qa.md`, 테스트 코드 |
@@ -58,7 +58,7 @@ pre-interview 완료 후, `reports/01-pre-interview.md`를 읽고 아래 항목�
 - 사용자가 "수동 설정"을 선택한 항목은 건드리지 않고, 해당 사실을 개발 에이전트에게 전달한다
 - 모든 항목 확인 후 작업 2a, 2c로 진행한다
 
-작업 2a(관리자 프론트엔드 개발), 2b(관리자 백엔드 개발), 2c(LLM API 개발)는 **병렬 실행**한다. 모두 작업 1.5(설정 반영 확인)에 의존한다.
+작업 2a(프론트엔드 개발), 2b(백엔드 개발), 2c(LLM API 개발)는 **병렬 실행**한다. 모두 작업 1.5(설정 반영 확인)에 의존한다.
 
 ### 작업 3: 사용자 확인 (QA 전 필수 게이트)
 
@@ -67,7 +67,7 @@ pre-interview 완료 후, `reports/01-pre-interview.md`를 읽고 아래 항목�
 1. **`application.yml` DB 접속 정보 확인** — 사전 인터뷰에서 받은 정보가 올바르게 설정되었는지 확인 요청
 2. **`projs/llm-api/.env` API 키 설정 확인** — 사용자가 직접 API 키를 입력했는지 확인 요청
 3. **`docs/db/create-tables.sql` 직접 실행 요청** — 사용자가 DB 클라이언트(pgAdmin, DBeaver 등)에서 직접 DDL을 실행
-4. **테이블 생성 완료 확인** — 사용자가 "완료" 응답할 때까지 대기
+4. **테이블 생성 완료 확인** — 1,2,3번을 진행 하라고 안내 후, "완료"라고 입력해달라고 안내 후, 사용자가 "완료" 응답할 때까지 대기
 
 > **⚠ 금지: `create-tables.sql`을 에이전트가 직접 실행하지 않는다.** DB 스키마 변경은 반드시 사용자가 수동으로 수행한다.
 
@@ -102,7 +102,7 @@ Skill 완료 후 자동으로 다음을 수행합니다:
 
 - ⚠️ 기존 파일을 덮어쓸 수 있습니다
 - ⚠️ 포트 3001이 사용 중이면 변경 필요
-- ⚠️ package.json에 MUI, Tailwind CSS가 설치되어 있어야 함
+- ⚠️ package.json에 MUI (@mui/material, @mui/icons-material, @emotion/react, @emotion/styled)가 설치되어 있어야 함 (Tailwind CSS 사용 금지)
 
 ## 지원
 

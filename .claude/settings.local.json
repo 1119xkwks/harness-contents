@@ -18,7 +18,10 @@
       "Bash(curl -s http://localhost:9001/hello)",
       "Bash(curl -s -X POST http://localhost:9001/api/auth/login -H \"Content-Type: application/json\" -d '{\"id\":\"admin\",\"pw\":\"admin1234\"}')",
       "Bash(netstat -ano)",
-      "Bash(awk '{print $5}')"
+      "Bash(awk '{print $5}')",
+      "Bash(pip install:*)",
+      "Bash(py -m pip install -r requirements.txt)",
+      "Bash(py --version)"
     ]
   }
 }

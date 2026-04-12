@@ -10,29 +10,43 @@
 
 ### 허용되는 색상
 
-- **흰색** (`#ffffff` 또는 `white`)
-- **회색 계열** (라이트 그레이, 다크 그레이)
-- **검은색** (`#000000` 또는 `black`)
+- **흰색** (`sx={{ bgcolor: '#ffffff' }}`)
+- **회색 계열** (`sx={{ bgcolor: '#ececec' }}`, `sx={{ bgcolor: '#f5f5f5' }}`)
+- **검은색** (`sx={{ color: '#000000' }}`)
 
 ### 사용 금지
 
-❌ 큰 레이아웃 영역에 primary, secondary 등 강렬한 브랜드 색상 사용 금지
+큰 레이아웃 영역에 primary, secondary 등 강렬한 브랜드 색상 사용 금지
 
 ### 예시
 
-#### ✅ 올바른 사용
+#### 올바른 사용
 
-**헤더 (AppBar)**
-```typescript
-<AppBar
-  sx={{
-    backgroundColor: "white",  // 중립적인 흰색
-    color: "black",
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",  // 미세한 그림자로 구분
-  }}
->
+```tsx
+{/* 헤더 */}
+<AppBar sx={{ bgcolor: '#fff', color: '#000', borderBottom: '1px solid #d0d0d0' }}>
+  ...
+</AppBar>
+
+{/* 사이드바 */}
+<Drawer sx={{ '& .MuiDrawer-paper': { bgcolor: '#ececec' } }}>
+  ...
+</Drawer>
+
+{/* 본문 */}
+<Box component="main" sx={{ bgcolor: '#f5f5f5' }}>
+  ...
+</Box>
+```
+
+#### 금지
+
+```tsx
+{/* ❌ 큰 영역에 강렬한 색상 사용 금지 */}
+<AppBar sx={{ bgcolor: 'primary.main' }}>...</AppBar>
+<Drawer sx={{ '& .MuiDrawer-paper': { bgcolor: '#5c6bc0' } }}>...</Drawer>
 ```
 
 ---
 
-**마지막 수정**: 2026-04-10
+**마지막 수정**: 2026-04-12
