@@ -1,6 +1,6 @@
 ---
 name: projs-setup
-description: 프런트 앤드 관리자 페이지를 자동으로 생성하고 화면 검증까지 수행
+description: FE, BE, LLM API 프로젝트를 자동으로 생성하고 검증까지 수행
 trigger: /projs-setup
 ---
 

@@ -187,7 +187,7 @@ class BackendClient:
         """BE API에서 페르소나(system prompt) 조회"""
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/api/admin/personas/{persona_id}"
+                f"{self.base_url}/api/ai-prompt-contents/{persona_id}"
             )
             response.raise_for_status()
             return response.json()["data"]

@@ -350,38 +350,14 @@ public ResponseEntity<ApiResponse<Void>> deleteUsers(
 ## Service 규칙
 
 ### 인터페이스/구현 분리
-```java
-// Service interface
-public interface UsersService {
-    Page<UsersDTO> getPage(Pageable pageable);
-    UsersDTO getUsersById(Long usersSeq);
-    UsersDTO createUsers(UsersDTO usersDTO, Authentication authentication);
-    UsersDTO updateUsers(Long usersSeq, UsersDTO usersDTO, Authentication authentication);
-    void deleteUsers(Long usersSeq, Authentication authentication);
-}
 
-// Service implementation
-@Service
-public class UsersServiceImpl implements UsersService { ... }
-```
+- `{Feature}Service` (interface) + `{Feature}ServiceImpl` (@Service) 분리
+- 전체 예시는 위의 "Spring Security & JWT 인증 규칙 > Service에서 로그인 사용자 정보 사용" 섹션 참조
 
-### 삭제 로직 (Soft Delete)
-```java
-@Override
-public void deleteUsers(Long usersSeq, Authentication authentication) {
-    CustomUserDetails currentUser = getCurrentUser(authentication);
-    UsersDTO users = usersMapper.selectById(usersSeq);
-    if (users == null) {
-        throw new RuntimeException("Users not found");
-    }
-    
-    users.setIsDeleted('Y');
-    users.setDeletedAt(LocalDateTime.now());
-    users.setUpdatedBy(currentUser.getUsersSeq().intValue());
-    users.setUpdatedAt(LocalDateTime.now());
-    usersMapper.softDelete(users);  // UPDATE 문으로 처리
-}
-```
+### Soft Delete
+
+- 물리 삭제(DELETE) 대신 `is_deleted = 'Y'` + `deleted_at` 업데이트
+- 전체 예시는 위의 "Service에서 로그인 사용자 정보 사용 > deleteUsers" 참조
 
 ## Controller 규칙
 
@@ -398,7 +374,7 @@ POST   /api/{feature-name}/delete/{id}  -- 삭제 (Soft Delete)
 
 새로운 Feature를 만들 때:
 
-- [ ] 테이블 스키마 정의 (docs/db/tables.md에 추가)
+- [ ] 테이블 스키마 정의 (docs/db/create-tables.sql에 추가)
 - [ ] DDL 작성 (docs/db/create-tables.sql에 추가)
 - [ ] {Feature}DTO 생성
 - [ ] {Feature}Mapper 인터페이스 생성

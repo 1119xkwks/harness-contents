@@ -14,9 +14,9 @@
 
 ### FE (Next.js)
 ```bash
-cd projs/fe-next && npm run dev -- --port 3001
+cd projs/fe-next && npm run dev -- --port 3000
 ```
-완료 후 http://localhost:3001에서 대시보드를 확인할 수 있습니다.
+완료 후 http://localhost:3000에서 대시보드를 확인할 수 있습니다.
 
 ### LLM API (FastAPI)
 ```bash

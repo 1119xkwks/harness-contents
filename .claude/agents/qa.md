@@ -58,24 +58,15 @@ model: haiku
   ```
 
 #### 메뉴 구조
-- [ ] 4개 메인 메뉴:
-  ```
-  ✓ 대시보드 (개요, 통계)
-  ✓ 사용자 관리 (사용자 목록, 권한 관리)
-  ✓ 리포트 (판매 리포트, 성능 분석)
-  ✓ 설정 (계정 설정, 보안 설정, 시스템 설정)
-  ```
+- [ ] BE API(`/api/admin/menus/tree`)에서 동적 메뉴 조회 — `docs/ui/page-menu-admin.md` 참조
+- [ ] MenuContext를 통해 메뉴 데이터 관리 (하드코딩 금지)
 
 ### 3️⃣ 상수 & 설정 검증
 
-#### menu.ts
-- [ ] 파일: `app/constants/menu.ts`
-- [ ] 구조:
-  ```typescript
-  ✓ export const MENU_ITEMS = [...]
-  ✓ label, icon, path 포함
-  ✓ children 배열로 서브메뉴
-  ```
+#### MenuContext (app/contexts/MenuContext.tsx)
+- [ ] BE API(`/api/admin/menus/tree`)에서 메뉴 데이터 조회
+- [ ] `menus`, `allowedUrls`, `loading`, `refreshMenus` 상태 관리
+- [ ] 하드코딩된 메뉴 배열이 없음 확인
 
 #### providers.tsx
 - [ ] 파일: `app/providers.tsx`
@@ -144,7 +135,7 @@ model: haiku
 
 #### 색상 가이드 (docs/ui/color.md)
 - [ ] 파일 존재
-- [ ] Primary, Secondary, Danger 색상 정의
+- [ ] 대규모 레이아웃 영역(헤더, 사이드바 등)에 중립 색상(흰/회/검) 사용 원칙 정의
 - [ ] 모든 컴포넌트가 가이드 색상 사용
 
 #### 타이포그래피 가이드 (docs/ui/typography.md)

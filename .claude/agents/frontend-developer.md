@@ -36,15 +36,6 @@ color: cyan
   - Breadcrumbs 지원
   - 모바일 메뉴 토글 버튼
 
-#### 상수 (app/constants/)
-- **menu.ts**
-  - 2-depth 메뉴 데이터 구조
-  - 4개 메인 메뉴 항목:
-    - 📊 대시보드 (개요, 통계)
-    - 👥 사용자 관리 (사용자 목록, 권한 관리)
-    - 📈 리포트 (판매 리포트, 성능 분석)
-    - ⚙️ 설정 (계정 설정, 보안 설정, 시스템 설정)
-
 #### 레이아웃 & 설정 (app/)
 - **providers.tsx**
   - MUI ThemeProvider 설정
@@ -65,12 +56,10 @@ color: cyan
   - 대시보드/개요 페이지
   - MainLayout으로 래핑
   - 환영 메시지 섹션
-  - 주요 지표 섹션 (4개 통계 카드)
-    - 총 사용자
-    - 오늘 방문자
-    - 월간 리포트
-    - 시스템 상태
-  - 빠른 실행 섹션 (3개 버튼)
+  - 주요 지표 섹션 (3개 통계 카드) — `docs/ui/page-menu-admin.md` 대시보드 섹션 참조
+    - 총 회원수 (`GET /api/users/page?size=1` → `totalElements`)
+    - 최근 가입자 수 (최근 7일 기준)
+    - 메뉴 수 (`GET /api/admin/menus/page?size=1` → `totalElements`)
   - CSS 모듈 스타일링
 
 ### 1. 페이지 구조 생성
@@ -165,7 +154,6 @@ interface MenuContextType {
 
 ### Sidebar 변경
 
-- `app/constants/menu.ts`의 하드코딩 메뉴 배열 **삭제**
 - MenuContext에서 메뉴 데이터를 가져와서 렌더링
 - `menuIcon` 필드를 MUI 아이콘으로 매핑
 - 로딩 중이면 Skeleton 표시
@@ -390,10 +378,10 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 | 경로 | 페이지 | 목업 | 설명 |
 |------|--------|------|------|
 | `/` | AI 선택 화면 | `mockup-01-select.html` | 카드 그리드로 AI 캐릭터 목록 표시 |
-| `/chat/[name]` | 채팅 화면 | `mockup-02-chat.html` | 선택한 AI와 카카오톡 스타일 대화 |
+| `/chat/[id]` | 채팅 화면 | `mockup-02-chat.html` | 선택한 AI와 카카오톡 스타일 대화 |
 
-- `[name]`은 AI 캐릭터의 영문 slug (예: `/chat/little-prince`, `/chat/wooyoungwoo`)
-- `/` 에서 카드 클릭 시 해당 AI의 `/chat/[name]`으로 이동
+- `[id]`는 `aiPromptContentsSeq` (DB PK, 숫자) (예: `/chat/1`, `/chat/5`)
+- `/` 에서 카드 클릭 시 해당 AI의 `/chat/[id]`으로 이동
 
 ### 디자인 규칙
 
@@ -438,7 +426,6 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 
 **생성할 파일** (위의 "파일 생성" 섹션 참조):
 - 컴포넌트: Sidebar.tsx, MainLayout.tsx
-- 상수: menu.ts
 - 레이아웃: providers.tsx, globals.css, layout.tsx
 - 페이지: page.tsx (+ CSS 모듈)
 - 문서: docs/ui/color.md, typography.md, layout.md
@@ -447,7 +434,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 1. 생성하는 모든 파일의 색상, 타이포그래피, 레이아웃 규칙은 docs/ui/ 문서에 명시
 2. 이후 새로운 페이지 추가 시 docs/ui/ 가이드라인을 반드시 준수
 3. 모든 컴포넌트/페이지는 MainLayout으로 래핑
-4. 2-depth 메뉴 구조: 대시보드, 사용자관리, 리포트, 설정 (각 2-3개 서브메뉴)
+4. 2-depth 메뉴 구조: BE API(`/api/admin/menus/tree`)에서 동적 조회 — `docs/ui/page-menu-admin.md` 참조
 
 모든 파일을 생성하고 완료해줘.
 ```
