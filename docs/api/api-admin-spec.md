@@ -1099,6 +1099,274 @@ POST /api/file/delete?attachmentsSeq={마스터번호}&attachmentFilesSeq={디�
 
 ---
 
+## 10. AI 프롬프트 관리 (AI Prompt Contents)
+
+> **관리자 API**: `/api/admin/ai-prompt-contents/*` — 인증 필요 (CRUD)
+> **사용자 API**: `/api/ai-prompt-contents/*` — 인증 불필요 (Public, 조회 전용)
+
+### 10-1. [관리자] 목록 조회
+
+```
+GET /api/admin/ai-prompt-contents/page?page=0&size=10
+```
+
+**Query Parameters**
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|---------|------|------|------|
+| page | int | N | 페이지 번호 (기본 0) |
+| size | int | N | 페이지당 건수 (기본 10) |
+| sort | String | N | 정렬 (예: `createdAt,desc`) |
+| title | String | N | 제목 검색 |
+| categoryCode | String | N | 카테고리 코드 필터 (예: `philosophy`) |
+
+**Response** `ApiResponse<Page<AiPromptContentsDTO>>`
+```json
+{
+  "status": "success",
+  "data": {
+    "content": [
+      {
+        "aiPromptContentsSeq": 1,
+        "title": "어린왕자",
+        "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
+        "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
+        "categoryCode": "philosophy",
+        "categoryName": "철학",
+        "profileImage": {
+          "attachmentsSeq": 10,
+          "attachmentFilesSeq": 15
+        },
+        "isDeleted": "N",
+        "createdBy": 1,
+        "createdAt": "2026-04-12T00:00:00",
+        "updatedBy": null,
+        "updatedAt": null
+      }
+    ],
+    "page": 0,
+    "size": 10,
+    "totalElements": 1,
+    "totalPages": 1,
+    "first": true,
+    "last": true
+  }
+}
+```
+
+> `categoryName`은 `common_codes`에서 `code_group='ai_category'`, `code_value=categoryCode`의 `code_name`을 조회하여 반환
+
+### 10-2. [관리자] 상세 조회
+
+```
+GET /api/admin/ai-prompt-contents/{aiPromptContentsSeq}
+```
+
+**Response** `ApiResponse<AiPromptContentsDTO>`
+
+### 10-3. [관리자] 생성
+
+```
+POST /api/admin/ai-prompt-contents/create
+```
+
+**Request Body**
+```json
+{
+  "title": "어린왕자",
+  "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
+  "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
+  "categoryCode": "philosophy"
+}
+```
+
+**Response** `ApiResponse<AiPromptContentsDTO>`
+
+### 10-4. [관리자] 수정
+
+```
+POST /api/admin/ai-prompt-contents/update/{aiPromptContentsSeq}
+```
+
+**Request Body**
+```json
+{
+  "title": "어린왕자(수정)",
+  "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
+  "promptContent": "수정된 프롬프트 내용...",
+  "categoryCode": "philosophy"
+}
+```
+
+**Response** `ApiResponse<AiPromptContentsDTO>`
+
+### 10-5. [관리자] 삭제 (Soft Delete)
+
+```
+POST /api/admin/ai-prompt-contents/delete/{aiPromptContentsSeq}
+```
+
+**Response** `ApiResponse<Void>`
+
+### 10-6. [사용자] 전체 목록 조회 (Public - 인증 불필요)
+
+```
+GET /api/ai-prompt-contents/list
+```
+
+> 홈페이지(`/`) AI 선택 카드에서 사용. `is_deleted='N'`인 전체 목록 반환 (페이징 없음).
+> SecurityConfig에서 **permitAll** 처리 필수.
+
+**Response** `ApiResponse<List<AiPromptContentsDTO>>`
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "aiPromptContentsSeq": 1,
+      "title": "어린왕자",
+      "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
+      "categoryCode": "philosophy",
+      "categoryName": "철학",
+      "profileImage": {
+        "attachmentsSeq": 10,
+        "attachmentFilesSeq": 15
+      }
+    }
+  ]
+}
+```
+
+> `promptContent`는 목록 응답에 포함하지 않음 (용량 절약)
+
+### 10-7. [사용자] 단건 조회 (Public - 인증 불필요)
+
+```
+GET /api/ai-prompt-contents/{aiPromptContentsSeq}
+```
+
+> LLM API가 페르소나의 system prompt를 조회할 때 사용.
+> SecurityConfig에서 **permitAll** 처리 필수.
+
+**Response** `ApiResponse<AiPromptContentsDTO>`
+```json
+{
+  "status": "success",
+  "data": {
+    "aiPromptContentsSeq": 1,
+    "title": "어린왕자",
+    "intro": "B612 소행성에서 온 순수한 영혼의 왕자",
+    "promptContent": "당신은 생텍쥐베리의 '어린 왕자'입니다...",
+    "categoryCode": "philosophy",
+    "categoryName": "철학",
+    "profileImage": {
+      "attachmentsSeq": 10,
+      "attachmentFilesSeq": 15
+    }
+  }
+}
+```
+
+---
+
+## 11. LLM 스트리밍 채팅 (FE ↔ LLM API)
+
+> **Base URL**: `http://localhost:9000` (LLM API — FastAPI)
+> **FE 환경변수**: `NEXT_PUBLIC_LLM_API_URL`
+> **인증**: 불필요 (Public)
+> **통신 방식**: HTTP 스트리밍 (`StreamingResponse`, chunked `text/plain`)
+
+### 아키텍처
+
+```
+[FE (Next.js)] --HTTP 스트리밍--> [LLM API (FastAPI :9000)] --SDK--> [OpenAI/Anthropic/Google]
+                                         |
+                                         +--REST--> [BE (Spring Boot :8080)]
+                                                     GET /api/ai-prompt-contents/{id}
+                                                     (페르소나 system prompt 조회)
+```
+
+### 11-1. 스트리밍 채팅
+
+```
+POST http://localhost:9000/api/chat/stream
+Content-Type: application/json
+```
+
+**Request Body**
+```json
+{
+  "personaId": 1,
+  "provider": "openai",
+  "model": "gpt-5-mini",
+  "messages": [
+    { "role": "user", "content": "안녕하세요?" }
+  ]
+}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| personaId | int | Y | `ai_prompt_contents_seq` (페르소나 PK) |
+| provider | String | Y | LLM 프로바이더 (`openai`, `anthropic`, `google`) |
+| model | String | Y | 모델명 (예: `gpt-5-mini`, `claude-sonnet-4-6`, `gemini-2.0-flash`) |
+| messages | Array | Y | 대화 히스토리 (`role`: `user`/`assistant`, `content`: 메시지) |
+
+**Response**: `text/plain; charset=utf-8` (chunked streaming)
+
+```
+토큰1토큰2토큰3...
+```
+
+> 토큰 단위로 실시간 전송. FE에서 `fetch` + `response.body.getReader()` + `ReadableStream`으로 수신.
+
+### 11-2. 사용 가능한 프로바이더 조회
+
+```
+GET http://localhost:9000/api/providers
+```
+
+> API 키가 설정된 프로바이더 목록 반환
+
+**Response**
+```json
+{
+  "providers": [
+    { "name": "openai", "models": ["gpt-5-mini", "gpt-5"] },
+    { "name": "anthropic", "models": ["claude-sonnet-4-6", "claude-haiku-4-5-20251001"] },
+    { "name": "google", "models": ["gemini-2.0-flash"] }
+  ]
+}
+```
+
+### FE 스트리밍 수신 예시
+
+```typescript
+const response = await fetch(`${LLM_API_URL}/api/chat/stream`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    personaId: aiPromptContentsSeq,
+    provider: 'openai',
+    model: 'gpt-5-mini',
+    messages: chatHistory,
+  }),
+});
+
+const reader = response.body!.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const chunk = decoder.decode(value, { stream: true });
+  // 말풍선에 텍스트 추가 (실시간)
+  appendToMessage(chunk);
+}
+```
+
+---
+
 ## API 엔드포인트 요약
 
 | # | Method | URL | 설명 |
@@ -1154,3 +1422,15 @@ POST /api/file/delete?attachmentsSeq={마스터번호}&attachmentFilesSeq={디�
 | 38 | GET | `/api/file/download?attachmentsSeq=&attachmentFilesSeq=` | 파일 다운로드 (Public, 강제) |
 | 39 | GET | `/api/file/list?attachmentsSeq=` | 첨부파일 목록 (마스터 기준) |
 | 40 | POST | `/api/file/delete?attachmentsSeq=&attachmentFilesSeq=` | 파일 삭제 (Soft Delete) |
+| **AI Prompt Contents (관리자)** |
+| 41 | GET | `/api/admin/ai-prompt-contents/page` | AI 프롬프트 목록 |
+| 42 | GET | `/api/admin/ai-prompt-contents/{aiPromptContentsSeq}` | AI 프롬프트 상세 |
+| 43 | POST | `/api/admin/ai-prompt-contents/create` | AI 프롬프트 생성 |
+| 44 | POST | `/api/admin/ai-prompt-contents/update/{aiPromptContentsSeq}` | AI 프롬프트 수정 |
+| 45 | POST | `/api/admin/ai-prompt-contents/delete/{aiPromptContentsSeq}` | AI 프롬프트 삭제 |
+| **AI Prompt Contents (사용자 - Public)** |
+| 46 | GET | `/api/ai-prompt-contents/list` | AI 전체 목록 (홈페이지용, Public) |
+| 47 | GET | `/api/ai-prompt-contents/{aiPromptContentsSeq}` | AI 단건 조회 (LLM API용, Public) |
+| **LLM API (FastAPI :9000)** |
+| 48 | POST | `http://localhost:9000/api/chat/stream` | 스트리밍 채팅 (FE → LLM API 직접) |
+| 49 | GET | `http://localhost:9000/api/providers` | 사용 가능 프로바이더 목록 |

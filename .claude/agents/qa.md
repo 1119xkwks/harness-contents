@@ -795,6 +795,120 @@ model: haiku
 
 ---
 
+## 📋 PART 5: AI 프롬프트 관리 검증
+
+### 1️⃣ 관리자 페이지 — AI 프롬프트 목록 (`/admin/content/ai-prompts`)
+
+#### 페이지 구조
+- [ ] 페이지 유형: `LIST` (`docs/ui/page-menu-admin.md` 섹션 10 참조)
+- [ ] MainLayout으로 래핑, breadcrumbs: 콘텐츠 > AI 프롬프트
+- [ ] 검색 영역: 제목(title) 입력 + 카테고리(categoryCode) 드롭다운 + 검색 버튼
+- [ ] 카테고리 드롭다운: `GET /api/common-codes/detail/page?codeGroup=ai_category` 로 동적 조회
+
+#### 테이블 컬럼
+- [ ] No (순번), 아바타, 제목, 소개(말줄임), 카테고리(code_name), 등록일
+- [ ] 아바타: 32×32 원형 썸네일, 이미지 없으면 제목 첫 글자 아바타 fallback
+- [ ] 행 클릭 → `/admin/content/ai-prompts/detail/{aiPromptContentsSeq}` 이동
+- [ ] 등록 버튼 → `/admin/content/ai-prompts/detail/new` 이동
+
+#### 페이징 리스트 UI 규칙 (`docs/ui/paging-list-ui-admin.md`)
+- [ ] Total 건수 좌측, 등록 버튼 우측
+- [ ] 기본 10건, 건수 변경 셀렉트박스
+- [ ] 번호 페이징 (5개씩), 이전/다음 버튼
+
+### 2️⃣ 관리자 페이지 — AI 프롬프트 상세 (`/admin/content/ai-prompts/detail/:id`)
+
+#### 페이지 구조
+- [ ] 페이지 유형: `DETAIL` (`docs/ui/page-menu-admin.md` 섹션 11 참조)
+- [ ] 모드: 조회 / 생성(`/detail/new`) / 수정
+- [ ] 아바타 이미지: 폼 최상단 배치 (회원 상세와 동일 패턴)
+
+#### 아바타 이미지 업로드
+- [ ] 조회 모드: 이미지만 표시, 업로드 버튼 숨김
+- [ ] 생성 모드: 아바타 이미지 영역 숨김
+- [ ] 수정 모드: 업로드 버튼 → 파일 선택 → `POST /api/file/upload` 즉시 업로드
+- [ ] 업로드 후 결과 이미지 즉시 반영 (저장 버튼과 독립)
+
+#### 폼 필드
+- [ ] 제목(`title`): 생성=입력, 수정=입력, 조회=읽기전용
+- [ ] 카테고리(`categoryCode`): 생성/수정=드롭다운, 조회=읽기전용(code_name 표시)
+- [ ] 소개(`intro`): 생성=입력, 수정=입력, 조회=읽기전용
+- [ ] 프롬프트 내용(`promptContent`): 생성/수정=textarea, 조회=읽기전용
+  - [ ] textarea 최소 10줄 높이
+  - [ ] 모노스페이스 폰트 적용
+
+#### 버튼
+- [ ] 조회 모드: 수정, 삭제, 목록
+- [ ] 생성 모드: 저장, 취소
+- [ ] 수정 모드: 저장, 취소
+
+### 3️⃣ 홈페이지(`/`) ↔ AI 프롬프트 데이터 매칭
+
+> 홈페이지 목업(`mockup-01-select.html`)의 AI 선택 카드가 DB의 `ai_prompt_contents` 데이터와 정확히 매칭되는지 검증
+
+#### 데이터 소스 매칭
+- [ ] AI 카드 목록이 `GET /api/ai-prompt-contents/list` (Public) 에서 동적 조회됨
+- [ ] 하드코딩된 AI 캐릭터 데이터가 **없음** (모두 DB에서 조회)
+- [ ] `is_deleted = 'N'`인 레코드만 표시됨
+
+#### 카드 ↔ 테이블 필드 매칭
+| 카드 UI 요소 | DB 필드 | 비고 |
+|-------------|---------|------|
+| AI 이름 | `title` | |
+| 설명 | `intro` | |
+| 카테고리 태그 | `categoryCode` → `code_name`으로 변환 표시 | |
+| 아바타 이미지 | 첨부파일 API | `target_table='ai_prompt_contents'` |
+| 카드 클릭 URL | `/chat/{aiPromptContentsSeq}` | PK 기반 slug |
+
+#### 이미지 fallback
+- [ ] 아바타 이미지 없을 때 → 제목 첫 글자 + 그라데이션 배경 fallback
+- [ ] `<img src="/api/file/content?...">` + `onerror` 핸들러
+
+### 4️⃣ 채팅 화면(`/chat/[id]`) ↔ LLM API 스트리밍 매칭
+
+#### 라우팅
+- [ ] `/chat/[id]`의 `id`는 `aiPromptContentsSeq` (PK 숫자)
+- [ ] 잘못된 id 접근 시 에러 처리 또는 `/`로 리다이렉트
+
+#### 스트리밍 연동
+- [ ] FE에서 LLM API(`http://localhost:9000`)로 **직접** 스트리밍 요청
+- [ ] BE(Spring Boot)를 거치지 않고 직접 통신
+- [ ] `NEXT_PUBLIC_LLM_API_URL` 환경변수 사용
+- [ ] 스트리밍 엔드포인트: `POST /api/chat/stream`
+- [ ] 요청 시 `aiPromptContentsSeq` (페르소나 ID) 전달
+- [ ] 응답: `StreamingResponse` (chunked text/plain)
+- [ ] FE에서 `fetch` + `ReadableStream`으로 토큰 단위 실시간 출력
+
+#### 채팅 UI ↔ 스트리밍 동작
+- [ ] AI 응답 수신 중 타이핑 인디케이터(점 3개) 표시
+- [ ] 토큰 수신할 때마다 말풍선에 텍스트 추가 (실시간)
+- [ ] 스트리밍 완료 후 타이핑 인디케이터 제거, 시간 표시
+- [ ] 사용자 메시지 전송 후 입력 필드 초기화
+
+### 5️⃣ LLM API 서버 검증
+
+#### 프로젝트 구조
+- [ ] `projs/llm-api/` 디렉토리 존재
+- [ ] `main.py` — FastAPI 앱 엔트리포인트
+- [ ] `requirements.txt` — 필수 패키지 포함 (fastapi, uvicorn, openai, anthropic, google-genai, httpx, python-dotenv)
+- [ ] `.env.example` — API 키 템플릿 존재
+
+#### API 키 검증
+- [ ] `.env`에 API 키 미설정 시 안내 메시지 출력 후 서버 종료
+- [ ] 최소 1개 이상 API 키 설정 시 정상 기동
+- [ ] 설정된 프로바이더만 사용 가능 (미설정 프로바이더 요청 시 에러 응답)
+
+#### CORS 설정
+- [ ] FE 포트(예: 3000)에서의 요청 허용
+- [ ] `allow_credentials=True`
+- [ ] `allow_methods=["*"]`, `allow_headers=["*"]`
+
+#### 페르소나 조회
+- [ ] LLM API가 BE API(`GET /api/ai-prompt-contents/{id}`)를 호출하여 system prompt 조회
+- [ ] DB에 직접 연결하지 않음
+
+---
+
 ## 🔍  검증 실행
 
 ### FE 자동 검증
