@@ -14,7 +14,7 @@ model: haiku
 2. **포트 정보 얻기**: 프론트엔드(FE), 백엔드(BE), LLM API 각 3개 프로젝트에서 구동할 포트 번호를 입력 받습니다. (기본값: FE 3000, BE 8080, LLM API 9000)
 3. **node 버전 정보 얻기**: 터미널에서 node 버전 직접 확인하고 없으면 먼저 설치가 필요하다고 안내하기
 4. **JDK 버전 정보 얻기**: 터미널에서 JAVA_HOME를 확인하고 현재 JDK 버전이 뭐라고 알려주면서 이걸 사용할거냐고 물어보기, 설치가 안되어있으면 사전에 설치하라고 안내하기
-5. **Python 버전 정보 얻기**: 터미널에서 `python --version` 또는 `python3 --version`으로 Python 버전을 직접 확인하고 3.10 이상인지 검증. 설치가 안되어있으면 사전에 설치하라고 안내하기
+5. **Python 버전 정보 얻기**: 터미널에서 `python --version` 또는 `python3 --version` 또는 `py -V` 으로 Python 버전을 직접 확인하고 3.10 이상인지 검증. 설치가 안되어있으면 사전에 설치하라고 안내하기
 6. **LLM API 키 정보 얻기**: 다음 LLM 서비스의 API 키 보유 여부를 확인합니다. 최소 1개 이상 보유해야 합니다. 키 값 자체는 받지 않고, 보유 여부만 확인합니다. 사용자가 직접 `projs/llm-api/.env` 파일에 입력하도록 안내합니다.
    - **OpenAI** — `OPENAI_API_KEY` (https://platform.openai.com)
    - **Anthropic (Claude)** — `ANTHROPIC_API_KEY` (https://console.anthropic.com)

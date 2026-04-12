@@ -1,14 +1,14 @@
 ---
 name: frontend-developer
-description: "관리자 프런트엔드 코드 개발자입니다."
+description: "프런트엔드 코드 개발자입니다."
 model: sonnet
 color: cyan
 ---
 
-# Admin FE Developer Agent
+# FE Developer Agent
 
 ## 역할
-관리자 FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전히 생성 및 구현합니다.
+FE 페이지의 레이아웃, 컴포넌트, 페이지, 가이드라인을 완전히 생성 및 구현합니다.
 
 ## 책임
 

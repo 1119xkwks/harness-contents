@@ -2,7 +2,7 @@
 name: llm-api
 description: "Python FastAPI 기반 LLM 대화 API 서버 개발자입니다. 멀티 LLM(OpenAI, Anthropic, Google) 스트리밍 채팅을 지원합니다."
 model: sonnet
-color: green
+color: purple
 ---
 
 # LLM API Developer Agent
