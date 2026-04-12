@@ -1,10 +1,10 @@
----
+관리자---
 name: projs-setup
 description: FE, BE, LLM API 프로젝트를 자동으로 생성하고 검증까지 수행
 trigger: /projs-setup
 ---
 
-# 관리자 FE 페이지 Setup & Validation
+# ChatBot 게시판 FE 페이지 Setup & Validation
 
 웹앱의 요구사항→설계→프론트엔드→백엔드→테스트를 에이전트 팀이 협업하여 개발한다.
 
@@ -17,8 +17,8 @@ trigger: /projs-setup
 | 에이전트 | 파일 | 역할 | 타입 |
 |---------|------|------|------|
 | 사전 정보 인터뷰 | `.claude/agents/pre-interview.md` | DB 정보, 운영 포트, LLM 모델, Python 버전 정보 얻기 | general-purpose |
-| 관리자 FE 개발자 | `.claude/agents/frontend-developer.md` | 관리자 FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
-| 관리자 BE 개발자 | `.claude/agents/backend-developer.md` | 관리자 BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
+| FE 개발자 | `.claude/agents/frontend-developer.md` | FE 페이지 레이아웃, 컴포넌트, 페이지, 가이드라인 생성 | general-purpose |
+| BE 개발자 | `.claude/agents/backend-developer.md` | BE 프로젝트 생성, MyBatis로 DB 연결 | general-purpose |
 | LLM API 개발자 | `.claude/agents/llm-api.md` | Python FastAPI LLM 스트리밍 채팅 API 서버 생성 | general-purpose |
 | QA 검증 | `.claude/agents/qa.md` | FE/BE/LLM API 코드 품질 및 컨벤션 규칙 검증 | general-purpose |
 
@@ -30,8 +30,8 @@ trigger: /projs-setup
 |------|------|------|------|--------|
 | 1 | 사전 인터뷰 | 정보 얻기 | 없음 | `reports/01-pre-interview.md` |
 | 1.5 | 설정 반영 확인 | 오케스트레이터 | 작업 1 | 설정 파일 반영 완료 |
-| 2a | 관리자 프론트엔드 개발 | frontend | 작업 1.5 | `projs/fe-next` 프론트앤드 코드 |
-| 2b | 관리자 백엔드 개발 | backend | 작업 1.5 | `projs/be-springboot` 백엔드 코드 |
+| 2a | 프론트엔드 개발 | frontend | 작업 1.5 | `projs/fe-next` 프론트앤드 코드 |
+| 2b | 백엔드 개발 | backend | 작업 1.5 | `projs/be-springboot` 백엔드 코드 |
 | 2c | LLM API 개발 | llm-api | 작업 1.5 | `projs/llm-api` Python FastAPI 코드 |
 | 3 | 사용자 확인 (DB 세팅) | 사용자 | 작업 2a, 2b, 2c | DB 테이블 생성 완료 |
 | 4 | QA 검증 & 테스트 | qa | 작업 3 | `reports/qa.md`, 테스트 코드 |
@@ -58,7 +58,7 @@ pre-interview 완료 후, `reports/01-pre-interview.md`를 읽고 아래 항목�
 - 사용자가 "수동 설정"을 선택한 항목은 건드리지 않고, 해당 사실을 개발 에이전트에게 전달한다
 - 모든 항목 확인 후 작업 2a, 2c로 진행한다
 
-작업 2a(관리자 프론트엔드 개발), 2b(관리자 백엔드 개발), 2c(LLM API 개발)는 **병렬 실행**한다. 모두 작업 1.5(설정 반영 확인)에 의존한다.
+작업 2a(프론트엔드 개발), 2b(백엔드 개발), 2c(LLM API 개발)는 **병렬 실행**한다. 모두 작업 1.5(설정 반영 확인)에 의존한다.
 
 ### 작업 3: 사용자 확인 (QA 전 필수 게이트)
 

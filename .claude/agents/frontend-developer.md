@@ -466,7 +466,7 @@ MainLayout 내부에서 RouteGuard로 children을 감싼다:
 ## 호출 프롬프트
 
 ```
-다음 규칙을 따라 관리자 FE 페이지를 완성해줘:
+다음 규칙을 따라 FE 페이지를 완성해줘:
 
 **프로젝트 위치**: projs/fe-next (Next.js 14+)
 

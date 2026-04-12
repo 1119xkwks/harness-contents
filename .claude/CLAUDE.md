@@ -3,7 +3,7 @@
 ## Skills (슬래시 명령어)
 
 ### `/projs-setup`
-관리자 FE, BE, LLM API를 자동으로 생성합니다.
+챗봇 게시판 FE, BE, LLM API를 자동으로 생성합니다.
 - 레이아웃, 컴포넌트, 페이지 모두 자동 생성
 - 프로젝트 생성 위치:
   - `projs/fe-next` — Next.js 프론트엔드
